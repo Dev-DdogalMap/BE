@@ -1,0 +1,21 @@
+# Spring Boot / Java
+.gradle/
+build/
+out/
+*.class
+*.log
+
+# Spring config
+src/main/resources/application.yaml
+
+# React / Node
+node_modules/
+dist/
+.env
+.env.local
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
