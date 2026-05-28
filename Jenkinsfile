@@ -48,15 +48,15 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                    for i in {1..20}; do
-                      STATUS=$(curl -s http://3.34.56.146:8080/actuator/health | grep UP || true)
+                    for i in {1..10}; do
+                      STATUS=$(curl -s http://localhost:8080/actuator/health | grep UP || true)
 
                       if [ -n "$STATUS" ]; then
                         echo "Health Check 성공"
                         exit 0
                       fi
 
-                      echo "Health Check 재시도 중... ($i/20)"
+                      echo "Health Check 재시도 중... ($i/10)"
                       sleep 5
                     done
 
