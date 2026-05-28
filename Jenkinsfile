@@ -24,14 +24,14 @@ pipeline {
         stage('Prepare Config') {
             steps {
                 withCredentials([
-                    file(credentialsId: 'application-yml', variable: 'APP_YML')
+                    file(credentialsId: 'application-yaml', variable: 'APP_YML')
                 ]) {
                     sh '''
                         mkdir -p ${CONFIG_DIR}
 
-                        cp "$APP_YML" ${CONFIG_DIR}/application.yml
+                        cp "$APP_YML" ${CONFIG_DIR}/application.yaml
 
-                        chmod 600 ${CONFIG_DIR}/application.yml
+                        chmod 644 ${CONFIG_DIR}/application.yaml
                     '''
                 }
             }
