@@ -48,12 +48,12 @@ pipeline {
         stage('Health Check') {
             steps {
                 script {
-                    def maxRetry = 40
+                    def maxRetry = 10
                     def success = false
 
                     for (int i = 0; i < maxRetry; i++) {
                         def status = sh(
-                            script: "curl -s http://localhost:8080/actuator/health | grep UP || true",
+                            script: "curl -s http://3.34.56.146:8080/actuator/health | grep UP || true",
                             returnStdout: true
                         ).trim()
 
