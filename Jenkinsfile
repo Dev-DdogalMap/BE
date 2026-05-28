@@ -47,23 +47,34 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                sh '''
-                    for i in {1..10}; do
-                      STATUS=$(curl -s http://localhost:8080/actuator/health | grep UP || true)
+                script {
+                    def maxRetry = 40
+                    def success = false
 
-                      if [ -n "$STATUS" ]; then
-                        echo "Health Check 성공"
-                        exit 0
-                      fi
+                    for (int i = 0; i < maxRetry; i++) {
+                        def status = sh(
+                            script: "curl -s http://localhost:8080/actuator/health | grep UP || true",
+                            returnStdout: true
+                        ).trim()
 
-                      echo "Health Check 재시도 중... ($i/10)"
-                      sleep 5
-                    done
+                        if (status.contains("UP")) {
+                            success = true
+                            echo "Health Check 성공"
+                            break
+                        }
 
-                    docker logs spring-app --tail=100
+                        echo "Health Check 재시도 중... (${i + 1}/${maxRetry})"
+                        sleep 5
+                    }
 
-                    exit 1
-                '''
+                    if (!success) {
+                        sh '''
+                            echo "========== Spring App Logs =========="
+                            docker logs spring-app --tail=200
+                        '''
+                        error("Health Check 실패")
+                    }
+                }
             }
         }
     }
