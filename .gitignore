@@ -4,9 +4,11 @@ build/
 out/
 *.class
 *.log
+bin/
 
 # Spring config
 src/main/resources/application.yaml
+src/main/resources/application-prod.yaml
 
 # React / Node
 node_modules/
