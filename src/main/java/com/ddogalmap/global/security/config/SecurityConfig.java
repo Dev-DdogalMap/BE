@@ -36,11 +36,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws-chat/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/auth/kakao/login",
-                                "/api/auth/kakao/callback")
+                                "/api/auth/kakao/callback",
+                                "/api/chats/ws-info")
                         .permitAll()
                         .anyRequest().authenticated()
                 )
