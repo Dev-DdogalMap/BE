@@ -4,7 +4,7 @@ import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
-import com.ddogalmap.domain.chat.entity.DirectChatMessage;
+import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
@@ -43,14 +43,14 @@ public class DirectChatRoomService {
         DirectChatRoom room = directChatRoomRepository.findBetweenUsers(requesterId, targetUserId)
                 .orElseGet(() -> directChatRoomRepository.save(DirectChatRoom.create(requester, receiver)));
 
-        DirectChatMessage latestMessage = directChatMessageRepository
-                .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescDirectChatMessageIdDesc(room.getDirectChatRoomId())
+        ChatMessages latestMessage = directChatMessageRepository
+                .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                 .orElse(null);
 
         return DirectChatMapper.toRoomResponse(
                 room,
                 requesterId,
-                latestMessage == null ? null : latestMessage.getContent(),
+                latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }
@@ -59,14 +59,14 @@ public class DirectChatRoomService {
     public List<DirectChatRoomResponse> getMyDirectChatRooms(Long currentUserId) {
         return directChatRoomRepository.findAllByParticipant(currentUserId).stream()
                 .map(room -> {
-                    DirectChatMessage latestMessage = directChatMessageRepository
-                            .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescDirectChatMessageIdDesc(room.getDirectChatRoomId())
+                    ChatMessages latestMessage = directChatMessageRepository
+                            .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                             .orElse(null);
 
                     return DirectChatMapper.toRoomResponse(
                             room,
                             currentUserId,
-                            latestMessage == null ? null : latestMessage.getContent(),
+                            latestMessage == null ? null : latestMessage.getMessage(),
                             latestMessage == null ? null : latestMessage.getCreatedAt()
                     );
                 })
@@ -86,8 +86,8 @@ public class DirectChatRoomService {
                         room.getDirectChatRoomId(),
                         PageRequest.of(0, pageSize)
                 ).stream()
-                .sorted(Comparator.comparing(DirectChatMessage::getCreatedAt)
-                        .thenComparing(DirectChatMessage::getDirectChatMessageId))
+                .sorted(Comparator.comparing(ChatMessages::getCreatedAt)
+                        .thenComparing(ChatMessages::getChatMessageId))
                 .map(DirectChatMapper::toMessageResponse)
                 .toList();
     }
@@ -105,13 +105,14 @@ public class DirectChatRoomService {
         }
 
         DirectChatRoom room = getParticipatingRoom(senderId, request.roomId());
-        User sender = getUser(senderId);
+        User writer = getUser(senderId);
 
-        DirectChatMessage message = directChatMessageRepository.save(
-                DirectChatMessage.create(
+        ChatMessages message = directChatMessageRepository.save(
+                ChatMessages.create(
                         room,
-                        sender,
-                        request.messageType(),
+                        writer,
+                        //request.messageType(),
+                        request.status(),
                         request.content().trim()
                 )
         );
@@ -122,14 +123,14 @@ public class DirectChatRoomService {
     @Transactional(readOnly = true)
     public DirectChatRoomResponse getDirectChatRoom(Long currentUserId, Long directChatRoomId) {
         DirectChatRoom room = getParticipatingRoom(currentUserId, directChatRoomId);
-        DirectChatMessage latestMessage = directChatMessageRepository
-                .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescDirectChatMessageIdDesc(room.getDirectChatRoomId())
+        ChatMessages latestMessage = directChatMessageRepository
+                .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                 .orElse(null);
 
         return DirectChatMapper.toRoomResponse(
                 room,
                 currentUserId,
-                latestMessage == null ? null : latestMessage.getContent(),
+                latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }

@@ -2,7 +2,7 @@ package com.ddogalmap.domain.chat.mapper;
 
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
-import com.ddogalmap.domain.chat.entity.DirectChatMessage;
+import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.users.entity.User;
 
@@ -31,14 +31,15 @@ public final class DirectChatMapper {
         );
     }
 
-    public static DirectChatMessageResponse toMessageResponse(DirectChatMessage message) {
+    public static DirectChatMessageResponse toMessageResponse(ChatMessages message) {
         return new DirectChatMessageResponse(
-                message.getDirectChatMessageId(),
+                message.getChatMessageId(),
                 message.getDirectChatRoom().getDirectChatRoomId(),
-                message.getSender().getUserId(),
-                message.getSender().getNickname(),
-                message.getMessageType(),
-                message.getContent(),
+                message.getWriter().getUserId(),
+                message.getWriter().getNickname(),
+                //message.getMessageType(),
+                message.getStatus(),
+                message.getMessage(),
                 message.getCreatedAt()
         );
     }
