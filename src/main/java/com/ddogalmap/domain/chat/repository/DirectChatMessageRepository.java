@@ -1,6 +1,6 @@
 package com.ddogalmap.domain.chat.repository;
 
-import com.ddogalmap.domain.chat.entity.DirectChatMessage;
+import com.ddogalmap.domain.chat.entity.ChatMessages;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,25 +10,25 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface DirectChatMessageRepository extends JpaRepository<DirectChatMessage, Long> {
+public interface DirectChatMessageRepository extends JpaRepository<ChatMessages, Long> {
 
-    @EntityGraph(attributePaths = {"sender", "directChatRoom"})
+    @EntityGraph(attributePaths = {"writer", "directChatRoom"})
     @Query("""
             select m
-            from DirectChatMessage m
+            from ChatMessages m
             where m.directChatRoom.directChatRoomId = :roomId
-            order by m.createdAt desc, m.directChatMessageId desc
+            order by m.createdAt desc, m.chatMessageId desc
             """)
-    List<DirectChatMessage> findRecentMessages(@Param("roomId") Long roomId, Pageable pageable);
+    List<ChatMessages> findRecentMessages(@Param("roomId") Long roomId, Pageable pageable);
 
     @Query("""
             select m
-            from DirectChatMessage m
+            from ChatMessages m
             where m.directChatRoom.directChatRoomId = :roomId
-            order by m.createdAt desc, m.directChatMessageId desc
+            order by m.createdAt desc, m.chatMessageId desc
             """)
-    List<DirectChatMessage> findAllByRoomOrderByRecent(@Param("roomId") Long roomId);
+    List<ChatMessages> findAllByRoomOrderByRecent(@Param("roomId") Long roomId);
 
-    @EntityGraph(attributePaths = {"sender", "directChatRoom"})
-    Optional<DirectChatMessage> findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescDirectChatMessageIdDesc(Long roomId);
+    @EntityGraph(attributePaths = {"writer", "directChatRoom"})
+    Optional<ChatMessages> findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(Long roomId);
 }

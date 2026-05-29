@@ -30,7 +30,8 @@ public class ChatMessageStompController {
                 request.roomType(),
                 savedMessage.directChatRoomId(),
                 savedMessage.senderId(),
-                savedMessage.messageType(),
+                //savedMessage.messageType(),
+                savedMessage.status(),
                 savedMessage.content(),
                 savedMessage.createdAt()
         );
