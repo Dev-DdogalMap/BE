@@ -37,13 +37,15 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/ws-chat/**"
+                                "/ws-chat/**",
+                                "/actuator/health"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/auth/kakao/login",
                                 "/api/auth/kakao/callback",
                                 "/api/chats/ws-info")
                         .permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenProvider {
 
     @Value("${jwt.secret}")
@@ -35,7 +37,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpirationMs);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("userId", userId)
                 .claim("role", role.name())
@@ -43,6 +45,11 @@ public class JwtTokenProvider {
                 .expiration(expiration)
                 .signWith(getSigningKey())
                 .compact();
+
+        log.info("Access Token 발급 userId={}, role={}", userId, role);
+        log.info("Access Token={}", token);
+
+        return token;
     }
 
     public Long getUserId(String token) {
