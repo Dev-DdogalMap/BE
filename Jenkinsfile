@@ -91,7 +91,7 @@ pipeline {
                     curl -H "Content-Type: application/json" \
                          -X POST \
                          -d '{
-                           "content": "✅ **배포 성공**\\\\n작성자: ${author}\\\\n커밋: ${message}\\\\n실행 시간: ${duration}\\\\n빌드 번호: #${BUILD_NUMBER}\\\\nURL: ${BUILD_URL}"
+                           "content": "✅ **배포 성공**\\n작성자: ${author}\\n커밋: ${message}\\n실행 시간: ${duration}\\n빌드 번호: #${BUILD_NUMBER}\\nURL: ${BUILD_URL}"
                          }' \
                          "$DISCORD_WEBHOOK"
                     """
@@ -110,7 +110,7 @@ pipeline {
                     curl -H "Content-Type: application/json" \
                          -X POST \
                          -d '{
-                           "content": "❌ **배포 실패**\\\\n작성자: ${author}\\\\n커밋: ${message}\\\\n실행 시간: ${duration}\\\\n빌드 번호: #${BUILD_NUMBER}\\\\nURL: ${BUILD_URL}"
+                           "content": "❌ **배포 실패**\\n작성자: ${author}\\n커밋: ${message}\\n실행 시간: ${duration}\\n빌드 번호: #${BUILD_NUMBER}\\nURL: ${BUILD_URL}"
                          }' \
                          "$DISCORD_WEBHOOK"
                     """
