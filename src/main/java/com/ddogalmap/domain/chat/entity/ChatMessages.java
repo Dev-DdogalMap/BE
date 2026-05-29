@@ -46,7 +46,6 @@ public class ChatMessages extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Status status;
 
-    @Lob
     @Column(nullable = false)
     private String message;
 
