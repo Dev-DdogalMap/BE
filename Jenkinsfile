@@ -78,4 +78,44 @@ pipeline {
             }
         }
     }
+
+    post {
+        success {
+            script {
+                def author = sh(script: "git log -1 --pretty=format:'%an'", returnStdout: true).trim()
+                def message = sh(script: "git log -1 --pretty=format:'%s'", returnStdout: true).trim()
+                def duration = currentBuild.durationString.replace(' and counting', '')
+
+                withCredentials([string(credentialsId: 'discord-webhook', variable: 'DISCORD_WEBHOOK')]) {
+                    sh """
+                    curl -H "Content-Type: application/json" \
+                         -X POST \
+                         -d '{
+                           "content": "✅ **배포 성공**\\\\n작성자: ${author}\\\\n커밋: ${message}\\\\n실행 시간: ${duration}\\\\n빌드 번호: #${BUILD_NUMBER}\\\\nURL: ${BUILD_URL}"
+                         }' \
+                         "$DISCORD_WEBHOOK"
+                    """
+                }
+            }
+        }
+
+        failure {
+            script {
+                def author = sh(script: "git log -1 --pretty=format:'%an' || echo unknown", returnStdout: true).trim()
+                def message = sh(script: "git log -1 --pretty=format:'%s' || echo unknown", returnStdout: true).trim()
+                def duration = currentBuild.durationString.replace(' and counting', '')
+
+                withCredentials([string(credentialsId: 'discord-webhook', variable: 'DISCORD_WEBHOOK')]) {
+                    sh """
+                    curl -H "Content-Type: application/json" \
+                         -X POST \
+                         -d '{
+                           "content": "❌ **배포 실패**\\\\n작성자: ${author}\\\\n커밋: ${message}\\\\n실행 시간: ${duration}\\\\n빌드 번호: #${BUILD_NUMBER}\\\\nURL: ${BUILD_URL}"
+                         }' \
+                         "$DISCORD_WEBHOOK"
+                    """
+                }
+            }
+        }
+    }
 }
