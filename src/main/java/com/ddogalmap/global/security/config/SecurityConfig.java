@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/kakao/login",
                                 "/api/auth/kakao/callback")
                         .permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
