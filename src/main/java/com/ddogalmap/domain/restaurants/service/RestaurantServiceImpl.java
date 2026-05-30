@@ -31,10 +31,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      */
     @Override
     public RestaurantMapResponse getRestaurantsOnMap(double swLat, double swLng, double neLat, double neLng, int limit) {
-        log.info(
-                "[RestaurantService] 지도 식당 조회 요청 - swLat: {}, swLng: {}, neLat: {}, neLng: {}, limit: {}",
-                swLat, swLng, neLat, neLng, limit
-        );
+        log.info("[RestaurantService] 지도 식당 조회 요청 - limit: {}", limit);
 
         RestaurantMapResponse response = RestaurantMapResponse.from(
                 restaurantRepository.findRestaurantsInBounds(swLat, swLng, neLat, neLng, limit)
@@ -55,7 +52,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      */
     @Override
     public RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, double lat, double lng) {
-        log.info("[RestaurantService] 식당 미리보기 조회 요청 - restaurantId: {}, lat: {}, lng: {}", restaurantId, lat, lng);
+        log.info("[RestaurantService] 식당 미리보기 조회 요청 - restaurantId: {}", restaurantId);
 
         RestaurantPreviewProjection projection =
                 restaurantRepository.findRestaurantPreview(restaurantId, lat, lng)

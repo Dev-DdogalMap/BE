@@ -35,10 +35,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
         LIMIT :limit
     """, nativeQuery = true)
     List<RestaurantMapProjection> findRestaurantsInBounds(
-            @Param("swLat") double swLat,
-            @Param("swLng") double swLng,
-            @Param("neLat") double neLat,
-            @Param("neLng") double neLng,
+            @Param("swLat") double swLat, @Param("swLng") double swLng,
+            @Param("neLat") double neLat, @Param("neLng") double neLng,
             @Param("limit") int limit
     );
 
@@ -54,7 +52,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                 ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
             ) AS INTEGER
         ) AS distance,
-        ROUND(AVG(rv.score), 1) AS averageRating,
+        ROUND(AVG(rv.score), 1) AS averageScore,
         COUNT(rv.review_id) AS reviewCount
         FROM restaurants r
         JOIN food_types ft
@@ -65,8 +63,5 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
         GROUP BY r.restaurant_id, r.place_name, ft.type, r.road_address_name, r.location
     """, nativeQuery = true)
     Optional<RestaurantPreviewProjection> findRestaurantPreview(
-            Long restaurantId,
-            double lat,
-            double lng
-    );
+            @Param("restaurantId") Long restaurantId,@Param("lat") double lat, @Param("lng") double lng);
 }
