@@ -40,9 +40,9 @@ public class SecurityConfig {
                                 "/ws-chat/**",
                                 "/actuator/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/kakao/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/auth/kakao/login",
-                                "/api/auth/kakao/callback",
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview")
@@ -65,7 +65,8 @@ public class SecurityConfig {
 
             config.setAllowedOrigins(List.of(
                     "http://localhost:5173",
-                    "http://localhost:3000"
+                    "http://localhost:3000",
+                    "https://ddogalmap.store"
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));
