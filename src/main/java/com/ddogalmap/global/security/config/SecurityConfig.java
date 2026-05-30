@@ -38,10 +38,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/auth/kakao/login",
-                                "/api/auth/kakao/callback")
-                        .permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/kakao/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
