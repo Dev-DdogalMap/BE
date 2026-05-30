@@ -33,6 +33,10 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantMapResponse getRestaurantsOnMap(double swLat, double swLng, double neLat, double neLng, int limit) {
         log.info("[RestaurantService] 지도 식당 조회 요청 - limit: {}", limit);
 
+        if (swLat >= neLat || swLng >= neLng) {
+            throw new IllegalArgumentException("잘못된 지도 영역입니다.");
+        }
+
         RestaurantMapResponse response = RestaurantMapResponse.from(
                 restaurantRepository.findRestaurantsInBounds(swLat, swLng, neLat, neLng, limit)
         );

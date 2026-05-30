@@ -5,6 +5,8 @@ import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 import com.ddogalmap.domain.restaurants.service.RestaurantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +27,10 @@ public class RestaurantController {
     )
     @GetMapping("/map")
     public ResponseEntity<RestaurantMapResponse> getRestaurantsOnMap(
-            @RequestParam double swLat,
-            @RequestParam double swLng,
-            @RequestParam double neLat,
-            @RequestParam double neLng,
+            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double swLat,
+            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double swLng,
+            @RequestParam @DecimalMin("-90.0") @DecimalMax("90.0") double neLat,
+            @RequestParam @DecimalMin("-180.0") @DecimalMax("180.0") double neLng,
             @RequestParam(defaultValue = "300") @Min(1) @Max(500) int limit
     ) {
         return ResponseEntity.ok(
