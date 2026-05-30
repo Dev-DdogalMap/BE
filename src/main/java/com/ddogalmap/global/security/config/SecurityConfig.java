@@ -43,7 +43,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/auth/kakao/login",
                                 "/api/auth/kakao/callback",
-                                "/api/chats/ws-info")
+                                "/api/chats/ws-info",
+                                "/api/restaurants/map",
+                                "/api/restaurants/*/preview")
                         .permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
