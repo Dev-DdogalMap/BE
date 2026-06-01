@@ -1,0 +1,34 @@
+package com.ddogalmap.domain.chat.entity;
+
+import com.ddogalmap.domain.foodtypes.entity.FoodType;
+import com.ddogalmap.domain.users.BaseEntity;
+import com.ddogalmap.domain.users.entity.User;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Getter
+@Entity
+@Table(name = "chat_rooms")
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class ChatRooms extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "chat_room_id")
+    private Long id;
+
+    @Column(name = "room_name", length = 100)
+    private String roomName;
+
+    @Column(name = "region", length = 50)
+    private String region;
+
+    @Column(name = "participant_count")
+    private Integer participantCount;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "food_type_id")
+    private FoodType foodType;
+}
