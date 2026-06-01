@@ -3,9 +3,7 @@ package com.ddogalmap.domain.chat.controller;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
-import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
-import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
-import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Direct Chat", description = "1:1 채팅방 및 메시지 API")
+@Tag(name = "ChatRooms", description = "그룹 채팅방 및 메시지 API")
 @RestController
 @RequestMapping("/api/chat-rooms")
 @RequiredArgsConstructor
@@ -50,5 +48,18 @@ public class ChatRoomsController {
             @RequestParam(required = false) Integer size
     ) {
         return chatRoomsService.getChatMessages(principal.userId(), roomId, size);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 참여",
+            description = "그룹 채팅방에 참여합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/{roomId}/join")
+    public JoinChatRoomResponse joinChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId
+    ) {
+        return chatRoomsService.joinChatRoom(principal.userId(), roomId);
     }
 }

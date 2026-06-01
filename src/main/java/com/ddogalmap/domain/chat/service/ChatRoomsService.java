@@ -3,6 +3,7 @@ package com.ddogalmap.domain.chat.service;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
@@ -91,6 +92,36 @@ public class ChatRoomsService {
                         chatMessages.getCreatedAt());
                 })
                 .toList();
+    }
+
+    /**
+     * 그룹 채팅방 참여
+     */
+    @Transactional
+    public JoinChatRoomResponse joinChatRoom(Long userId, Long roomId) {
+        User user = userRepository.getReferenceById(userId);  //FK 연결만 하면 되서 프록시 객체만 필요
+        ChatRooms chatRoom = chatRoomsRepository.findById(roomId).orElseThrow();
+
+        //중복 참여 검증
+        if (chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
+            throw new IllegalArgumentException("이미 해당 그룹 채팅방에 참여 중입니다.");
+        }
+
+        //채팅방 full 검증
+        if(chatRoom.getParticipantCount() >= chatRoom.getMaxParticipantCount()) {
+            throw new IllegalArgumentException("해당 그룹 채팅방은 인원이 다 찼습니다.");
+        }
+
+        //그룹 채팅 참여자 저장
+        chatRoomMembersRepository.save(ChatRoomMembers.builder()
+                        .user(user)
+                        .chatRoom(chatRoom)
+                        .role(ChatRoomMemberRole.MEMBER)
+                .build());
+
+        //그룹 채팅 참여인원 수정 - 동시성 문제를 막기 위해 원자적 update
+        chatRoomsRepository.increaseParticipantCount(chatRoom.getId());
+        return new JoinChatRoomResponse(chatRoom.getId());
     }
 
     //채팅방 조회
