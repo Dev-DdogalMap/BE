@@ -35,6 +35,10 @@ public class ChatMessages extends BaseEntity {
     private DirectChatRoom directChatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "chat_room_id", nullable = false)
+    private ChatRooms chatRoom;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "writer", nullable = false)
     private User writer;
 

@@ -31,4 +31,13 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessages, Long>
 
     @EntityGraph(attributePaths = {"writer", "directChatRoom"})
     Optional<ChatMessages> findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(Long roomId);
+
+    @EntityGraph(attributePaths = {"writer", "chatRoom"})
+    @Query("""
+            select m
+            from ChatMessages m
+            where m.chatRoom.id = :roomId
+            order by m.createdAt desc, m.chatMessageId desc
+            """)
+    List<ChatMessages> findGroupRecentMessages(@Param("roomId") Long roomId, Pageable pageable);
 }

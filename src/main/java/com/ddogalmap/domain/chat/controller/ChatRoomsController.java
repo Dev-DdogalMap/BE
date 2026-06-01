@@ -1,8 +1,10 @@
 package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
@@ -11,10 +13,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Direct Chat", description = "1:1 채팅방 및 메시지 API")
 @RestController
@@ -35,5 +36,19 @@ public class ChatRoomsController {
             @RequestBody CreateChatRoomRequest request
     ) {
         return chatRoomsService.createChatRoom(principal.userId(), request);
+    }
+
+    @Operation(
+            summary = "그룹 채팅 메시지 조회",
+            description = "현재 로그인한 사용자가 참여 중인 그룹 채팅방의 최근 메시지를 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{roomId}/messages")
+    public List<ChatMessageResponse> getGroupChatMessages(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestParam(required = false) Integer size
+    ) {
+        return chatRoomsService.getChatMessages(principal.userId(), roomId, size);
     }
 }
