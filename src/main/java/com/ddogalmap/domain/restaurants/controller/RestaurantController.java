@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.restaurants.controller;
 
+import com.ddogalmap.domain.restaurants.dto.response.RestaurantInfoResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantMapResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 import com.ddogalmap.domain.restaurants.service.RestaurantService;
@@ -38,17 +39,23 @@ public class RestaurantController {
         );
     }
 
-    @Operation(
-            summary = "음식점 미리보기 조회 API",
-            description = "음식점의 기본 정보를 조회합니다."
-    )
-    @GetMapping("/{restaurantId}/preview")
-    public ResponseEntity<RestaurantPreviewResponse> getRestaurantPreview(
-            @PathVariable Long restaurantId,
-            @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng) {
-        return ResponseEntity.ok(
-                restaurantService.getRestaurantPreview(restaurantId, lat, lng)
-        );
-    }
+	@Operation(
+			summary = "음식점 미리보기 조회 API",
+			description = "음식점의 기본 정보를 조회합니다."
+	)
+	@GetMapping("/{restaurantId}/preview")
+	public ResponseEntity<RestaurantPreviewResponse> getRestaurantPreview(
+			@PathVariable Long restaurantId, @RequestParam double lat, @RequestParam double lng) {
+		return ResponseEntity.ok(
+				restaurantService.getRestaurantPreview(restaurantId, lat, lng)
+		);
+	}
+
+	@Operation(summary = "음식점 정보 조회 API", description = "음식점의 위치 및 매장 정보를 조회합니다.")
+	@GetMapping("/{restaurantId}/info")
+	public ResponseEntity<RestaurantInfoResponse> getRestaurantInfo(@PathVariable Long restaurantId) {
+		return ResponseEntity.ok(restaurantService.getRestaurantInfo(restaurantId));
+	}
+
+
 }
