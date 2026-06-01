@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: ddogalmap
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ddogalmap}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    properties:
+      hibernate:
+        default_schema: ddogalmap_schema
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
+    open-in-view: false
+
+jwt:
+  secret: ddogalmap-jwt-secret-key-must-be-at-least-32-characters
+  access-token-expiration-ms: 3600000
+
+kakao:
+  client-id: ${KAKAO_REST_API_KEY:99d9114968f59241419a64a4209ed0cf}
+  client-secret: ${KAKAO_CLIENT_SECRET:tALhs4POJB3VIG9sgWduoP5ty7SpzEtb}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao/callback}
+  auth-uri: https://kauth.kakao.com/oauth/authorize
+  token-uri: https://kauth.kakao.com/oauth/token
+  user-info-uri: https://kapi.kakao.com/v2/user/me
+
+frontend:
+  url: ${FRONTEND_URL:http://localhost:5173}

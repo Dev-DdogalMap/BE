@@ -7,9 +7,11 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "review")
+@Table(name = "reviews")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -19,6 +21,9 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewId;
+
+    @Column(nullable = false)
+    private boolean isRevisit;
 
     @Column(nullable = false)
     private Integer score;
@@ -40,6 +45,19 @@ public class Review {
 
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
+
+    // 태그 관련 설정
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Tag> tags = new ArrayList<>();
+
+    public void addTag(String tagContent) {
+        Tag tag = Tag.builder()
+                .content(tagContent)
+                .review(this)
+                .build();
+        this.tags.add(tag);
+    }
 
     // 연관 관계 매핑 (필요 시 주석 해제)
     /*

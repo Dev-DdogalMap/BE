@@ -42,6 +42,10 @@ public class SecurityConfig {
                                 "/api/auth/kakao/login",
                                 "/api/auth/kakao/callback")
                         .permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/review",
+                                "/api/review/*/like")
+                        .permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
