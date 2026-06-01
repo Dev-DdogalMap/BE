@@ -8,7 +8,7 @@ import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
-import com.ddogalmap.domain.chat.repository.DirectChatMessageRepository;
+import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
@@ -27,7 +27,7 @@ public class DirectChatRoomService {
     private static final int DEFAULT_MESSAGE_PAGE_SIZE = 50;
 
     private final DirectChatRoomRepository directChatRoomRepository;
-    private final DirectChatMessageRepository directChatMessageRepository;
+    private final ChatMessageRepository directChatMessageRepository;
     private final UserRepository userRepository;
 
     @Transactional

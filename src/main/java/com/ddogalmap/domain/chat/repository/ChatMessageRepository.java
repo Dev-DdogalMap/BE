@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface DirectChatMessageRepository extends JpaRepository<ChatMessages, Long> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessages, Long> {
 
     @EntityGraph(attributePaths = {"writer", "directChatRoom"})
     @Query("""

@@ -2,7 +2,6 @@ package com.ddogalmap.domain.chat.entity;
 
 import com.ddogalmap.domain.foodtypes.entity.FoodType;
 import com.ddogalmap.domain.users.BaseEntity;
-import com.ddogalmap.domain.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +26,9 @@ public class ChatRooms extends BaseEntity {
 
     @Column(name = "participant_count")
     private Integer participantCount;
+
+    @Column(name = "max_participant_count")
+    private Integer maxParticipantCount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_type_id")
