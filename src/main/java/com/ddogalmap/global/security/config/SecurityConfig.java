@@ -36,16 +36,18 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/ws-chat/**",
+                                "/actuator/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/kakao/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/auth/kakao/login",
-                                "/api/auth/kakao/callback")
+                                "/api/chats/ws-info",
+                                "/api/restaurants/map",
+                                "/api/restaurants/*/preview")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST,
-                                "/api/review",
-                                "/api/review/*/like")
-                        .permitAll()
+                        .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
@@ -63,7 +65,8 @@ public class SecurityConfig {
 
             config.setAllowedOrigins(List.of(
                     "http://localhost:5173",
-                    "http://localhost:3000"
+                    "http://localhost:3000",
+                    "https://ddogalmap.store"
             ));
             config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
             config.setAllowedHeaders(List.of("*"));

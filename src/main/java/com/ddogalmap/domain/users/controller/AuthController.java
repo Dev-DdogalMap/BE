@@ -7,12 +7,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
+@Slf4j
 @Tag(name = "Auth", description = "인증 관련 API")
 @RestController
 @RequestMapping("/api/auth")
@@ -47,7 +49,7 @@ public class AuthController {
 
         Cookie accessTokenCookie = new Cookie("accessToken", loginResponse.accessToken());
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(false); // 로컬 http에서는 false
+        accessTokenCookie.setSecure(true); // 로컬 http에서는 false
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge(60 * 60); // 1시간
 
@@ -55,9 +57,12 @@ public class AuthController {
 
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(frontendUrl)
-                .path("/oauth/kakao/success")
+                .path("/oauth/success")
                 .build()
                 .toUriString();
+
+        log.info("frontendUrl={}", frontendUrl);
+        log.info("redirectUrl={}", redirectUrl);
 
         response.sendRedirect(redirectUrl);
     }
