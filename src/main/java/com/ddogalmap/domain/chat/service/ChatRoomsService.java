@@ -4,12 +4,15 @@ import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole;
+import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
+import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomMembersRepository;
@@ -122,6 +125,39 @@ public class ChatRoomsService {
         //그룹 채팅 참여인원 수정 - 동시성 문제를 막기 위해 원자적 update
         chatRoomsRepository.increaseParticipantCount(chatRoom.getId());
         return new JoinChatRoomResponse(chatRoom.getId());
+    }
+
+    /**
+     * 그룹 채팅 메세지 저장
+     */
+    @Transactional
+    public ChatMessageResponse saveChatMessage(Long senderId, ChatMessageSendRequest request) {
+        if (request.roomId() == null) {
+            throw new IllegalArgumentException("그룹 채팅방 ID는 필수입니다.");
+        }
+        if (request.content() == null || request.content().isBlank()) {
+            throw new IllegalArgumentException("메시지 내용은 비어 있을 수 없습니다.");
+        }
+
+        ChatRooms room = getParticipatingRoom(senderId, request.roomId());
+        User writer = userRepository.getReferenceById(senderId);
+
+        //메세지 저장
+        ChatMessages message = chatMessageRepository.save(
+                ChatMessages.builder()
+                        .message(request.content().trim())
+                        .writer(writer)
+                        .chatRoom(room)
+                        .status(Status.SENT)
+                        .build()
+        );
+        return new ChatMessageResponse(
+                message.getChatMessageId(),
+                room.getId(), writer.getUserId(),
+                writer.getNickname(),
+                message.getStatus(),
+                message.getMessage(),
+                message.getCreatedAt());
     }
 
     //채팅방 조회
