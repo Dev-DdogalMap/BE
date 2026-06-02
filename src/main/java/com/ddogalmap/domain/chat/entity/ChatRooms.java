@@ -30,6 +30,8 @@ public class ChatRooms extends BaseEntity {
     @Column(name = "max_participant_count")
     private Integer maxParticipantCount;
 
+    private String imageUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_type_id")
     private FoodType foodType;

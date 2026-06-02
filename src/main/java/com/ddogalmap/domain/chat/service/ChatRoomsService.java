@@ -1,9 +1,7 @@
 package com.ddogalmap.domain.chat.service;
 
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
-import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
-import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
-import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
@@ -162,6 +160,24 @@ public class ChatRoomsService {
                 message.getStatus(),
                 message.getMessage(),
                 message.getCreatedAt());
+    }
+
+    /**
+     * 채팅방 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public ChatRoomInfoResponse getChatRoomInfo(Long userId, Long roomId) {
+        ChatRooms room = getParticipatingRoom(userId, roomId);
+        List<MemberInfo> memberInfos = chatRoomMembersRepository.findAllByChatRoom(room);
+
+        return new ChatRoomInfoResponse(
+                room.getImageUrl(),
+                room.getRoomName(),
+                room.getParticipantCount(),
+                room.getMaxParticipantCount(),
+                room.getFoodType().getType(),
+                room.getRegion(),
+                memberInfos);
     }
 
     //채팅방 조회

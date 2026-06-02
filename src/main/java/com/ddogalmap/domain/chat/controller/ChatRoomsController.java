@@ -2,6 +2,7 @@ package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.ChatRoomInfoResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
@@ -67,6 +68,19 @@ public class ChatRoomsController {
             @PathVariable Long roomId
     ) {
         return chatRoomsService.joinChatRoom(principal.userId(), roomId);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 정보 조회",
+            description = "그룹 채팅방의 정보를 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{roomId}")
+    public ChatRoomInfoResponse getChatRoomInfo(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId
+    ) {
+        return chatRoomsService.getChatRoomInfo(principal.userId(), roomId);
     }
 
     @Operation(
