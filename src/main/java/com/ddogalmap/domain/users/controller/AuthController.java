@@ -49,7 +49,7 @@ public class AuthController {
 
         Cookie accessTokenCookie = new Cookie("accessToken", loginResponse.accessToken());
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(true); // 로컬 http에서는 false
+        accessTokenCookie.setSecure(!frontendUrl.startsWith("http://localhost"));
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge(60 * 60); // 1시간
 
@@ -58,6 +58,10 @@ public class AuthController {
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(frontendUrl)
                 .path("/oauth/success")
+                .queryParam("accessToken", loginResponse.accessToken())
+                .queryParam("userId", loginResponse.userId())
+                .queryParam("nickname", loginResponse.nickname())
+                .queryParam("profileImageUrl", loginResponse.profileImageUrl())
                 .build()
                 .toUriString();
 
