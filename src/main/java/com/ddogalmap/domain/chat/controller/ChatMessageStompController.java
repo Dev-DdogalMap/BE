@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.GroupChatMessageBroadcastResponse;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.response.ChatMessageBroadcastResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
@@ -50,10 +51,13 @@ public class ChatMessageStompController {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         ChatMessageResponse savedMessage = chatRoomsService.saveChatMessage(principal.userId(), request);
 
-        ChatMessageBroadcastResponse response = new ChatMessageBroadcastResponse(
+        GroupChatMessageBroadcastResponse response = new GroupChatMessageBroadcastResponse(
                 request.roomType(),
                 savedMessage.chatRoomId(),
                 savedMessage.senderId(),
+                savedMessage.senderNickname(),
+                savedMessage.senderProfileImage(),
+                savedMessage.senderLevel(),
                 savedMessage.status(),
                 savedMessage.content(),
                 savedMessage.createdAt()

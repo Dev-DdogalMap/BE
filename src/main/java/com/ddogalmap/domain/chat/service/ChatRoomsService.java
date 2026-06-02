@@ -90,6 +90,8 @@ public class ChatRoomsService {
                         room.getId(),
                         user.getUserId(),
                         user.getNickname(),
+                        user.getProfileImageUrl(),
+                        12,  //이거 레벨 조회해서 넣어야함
                         chatMessages.getStatus(),
                         chatMessages.getMessage(),
                         chatMessages.getCreatedAt());
@@ -155,6 +157,8 @@ public class ChatRoomsService {
                 message.getChatMessageId(),
                 room.getId(), writer.getUserId(),
                 writer.getNickname(),
+                writer.getProfileImageUrl(),
+                12,  //이거 레벨 조회해서 넣어야함
                 message.getStatus(),
                 message.getMessage(),
                 message.getCreatedAt());

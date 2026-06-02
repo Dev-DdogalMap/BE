@@ -9,11 +9,17 @@ import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Tag(name = "ChatRooms", description = "그룹 채팅방 및 메시지 API")
 @RestController
@@ -61,5 +67,21 @@ public class ChatRoomsController {
             @PathVariable Long roomId
     ) {
         return chatRoomsService.joinChatRoom(principal.userId(), roomId);
+    }
+
+    @Operation(
+            summary = "토큰 반환",
+            description = "웹소켓 연결에 쿠키에 담긴 토큰은 사용 못해서 따로 토큰 반환 요청 필요",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/auth/token")
+    public ResponseEntity<Map<String, String>> getToken(HttpServletRequest request) {
+        String token = Arrays.stream(request.getCookies())
+                .filter(cookie -> "accessToken".equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElseThrow(() -> new AccessDeniedException("토큰이 없습니다."));
+
+        return ResponseEntity.ok(Map.of("accessToken", token));
     }
 }
