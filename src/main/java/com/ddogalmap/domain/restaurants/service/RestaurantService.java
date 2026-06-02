@@ -7,6 +7,6 @@ import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 public interface RestaurantService {
 
     RestaurantMapResponse getRestaurantsOnMap(double swLat, double swLng, double neLat, double neLng, int limit);
-    RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, double lat, double lng);
+    RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, Double lat, Double lng);
     RestaurantInfoResponse getRestaurantInfo(Long restaurantId);
 }

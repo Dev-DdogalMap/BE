@@ -57,7 +57,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      * @return 식당 미리보기 정보
      */
     @Override
-    public RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, double lat, double lng) {
+    public RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, Double lat, Double lng) {
         log.info("[RestaurantService] 식당 미리보기 조회 요청 - restaurantId: {}", restaurantId);
 
         RestaurantPreviewProjection projection =
