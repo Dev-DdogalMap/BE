@@ -45,7 +45,9 @@ public class RestaurantController {
 	)
 	@GetMapping("/{restaurantId}/preview")
 	public ResponseEntity<RestaurantPreviewResponse> getRestaurantPreview(
-			@PathVariable Long restaurantId, @RequestParam double lat, @RequestParam double lng) {
+			@PathVariable Long restaurantId,
+			@RequestParam(required = false) Double lat,
+			@RequestParam(required = false) Double lng) {
 		return ResponseEntity.ok(
 				restaurantService.getRestaurantPreview(restaurantId, lat, lng)
 		);
