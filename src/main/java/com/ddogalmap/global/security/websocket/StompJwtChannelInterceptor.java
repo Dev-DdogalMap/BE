@@ -14,6 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import java.util.List;
 
 @Slf4j 	//로그 확인차 4군데 남겨두었습니다. 작성자: 이은성, 작성일시: 260601
 @Component
@@ -70,11 +71,25 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
 		return message;
 	}
 
-	private String resolveToken(StompHeaderAccessor accessor) {
-		String authHeader = accessor.getFirstNativeHeader(AUTHORIZATION_HEADER);
-		if (!StringUtils.hasText(authHeader) || !authHeader.startsWith(BEARER_PREFIX)) {
-			return null;
-		}
+    private String resolveToken(StompHeaderAccessor accessor) {
+        // 헤더에서 먼저 읽기
+        String authHeader = accessor.getFirstNativeHeader(AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(BEARER_PREFIX.length());
+        }
+
+        // 헤더 없으면 쿠키에서 읽기 -> 못 읽을 수도 있음 그러면 지우기
+        List<String> cookies = accessor.getNativeHeader("cookie");
+        if (cookies != null) {
+            for (String cookie : cookies) {
+                for (String part : cookie.split(";")) {
+                    String trimmed = part.trim();
+                    if (trimmed.startsWith("accessToken=")) {
+                        return trimmed.substring("accessToken=".length());
+                    }
+                }
+            }
+        }
 
 		return authHeader.substring(BEARER_PREFIX.length());
 	}
