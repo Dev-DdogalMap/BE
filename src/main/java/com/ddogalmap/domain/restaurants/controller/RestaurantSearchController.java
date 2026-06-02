@@ -26,7 +26,7 @@ public class RestaurantSearchController {
                     - keyword: 음식점 이름에 포함되는 텍스트
                     - region: 지번 주소에 포함되는 텍스트
                     - foodTypeId: 음식 종류 ID (food_types 테이블 참조)
-                    - lat, lng: 사용자 좌표 (거리 계][산용, 필수)
+                    - lat, lng: 사용자 좌표 (거리 계산용, 필수)
 
                     정렬 (sort):
                     - distance (기본): 거리 가까운 순 → 같으면 맛집 지수 높은 순

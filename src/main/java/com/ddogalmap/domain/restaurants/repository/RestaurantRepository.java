@@ -162,7 +162,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
         ORDER BY
             CASE WHEN :sort = 'distance'  THEN distance     END ASC,
             CASE WHEN :sort = 'jjinScore' THEN jjinScore    END DESC,
-            CASE WHEN :sort = 'score'     THEN averageScore END DESC,
+            CASE WHEN :sort = 'score'     THEN averageScore END DESC NULLS LAST,
             CASE WHEN :sort = 'distance'  THEN jjinScore    END DESC,
             CASE WHEN :sort <> 'distance' THEN distance     END ASC,
             restaurantId DESC

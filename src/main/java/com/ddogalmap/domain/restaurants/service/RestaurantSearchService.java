@@ -28,6 +28,8 @@ import java.util.Set;
 public class RestaurantSearchService {
 
     private static final int MAX_TAGS_PER_RESTAURANT = 3;
+    private static final int DEFAULT_SIZE = 20;
+    private static final int MAX_SIZE = 100;
 
     private static final Set<String> ALLOWED_SORTS = Set.of("distance", "jjinScore", "score");
     private static final String DEFAULT_SORT = "distance";
@@ -47,7 +49,7 @@ public class RestaurantSearchService {
     ) {
         String normalizedSort = normalizeSort(sort);
         int normalizedPage = page < 1 ? 1 : page;
-        int normalizedSize = size <= 0 ? 20 : size;
+        int normalizedSize = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
         int offset = (normalizedPage - 1) * normalizedSize;
 
         String normalizedKeyword = blankToNull(keyword);
