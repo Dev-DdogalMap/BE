@@ -29,7 +29,7 @@ public class RestaurantBatchInsertRepository {
 
     private static final String VALUES_TEMPLATE =
             "(?, ?, ?, ?, ?, ?, ?, ?, " +
-            "ST_Transform(ST_SetSRID(ST_MakePoint(?, ?), 2097), 4326)::geography, " +
+            "ST_Transform(ST_SetSRID(ST_MakePoint(?, ?), 5174), 4326)::geography, " +
             "?, NOW(), NOW())";
 
     private static final String ON_CONFLICT_SUFFIX = " ON CONFLICT (management_no) DO NOTHING";
