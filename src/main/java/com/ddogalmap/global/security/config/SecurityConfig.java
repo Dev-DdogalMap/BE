@@ -45,7 +45,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
-                                "/api/restaurants/*/preview")
+                                "/api/restaurants/*/preview",
+                                "/api/restaurants/search",
+                                "/api/food-types")
                         .permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
