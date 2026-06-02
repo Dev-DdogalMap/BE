@@ -46,7 +46,9 @@ public class SecurityConfig {
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview",
-                                "/api/restaurants/*/info")
+                                "/api/restaurants/*/info",
+                                "/api/restaurants/search",
+                                "/api/food-types")
                         .permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
