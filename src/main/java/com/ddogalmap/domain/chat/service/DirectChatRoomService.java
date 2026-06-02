@@ -6,11 +6,17 @@ import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
+import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
+import com.ddogalmap.domain.chat.exception.DirectChatRoomNotFoundException;
+import com.ddogalmap.domain.chat.exception.InvalidDirectChatRequestException;
+import com.ddogalmap.domain.chat.exception.MessageBlankException;
+import com.ddogalmap.domain.chat.exception.NotChatRoomMemberException;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.DirectChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
 import com.ddogalmap.domain.users.entity.User;
+import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -34,7 +40,7 @@ public class DirectChatRoomService {
     public DirectChatRoomResponse createOrGetDirectChatRoom(Long requesterId, CreateDirectChatRoomRequest request) {
         Long targetUserId = request.targetUserId();
         if (requesterId.equals(targetUserId)) {
-            throw new IllegalArgumentException("자기 자신과는 개인 채팅방을 만들 수 없습니다.");
+            throw new InvalidDirectChatRequestException("자기 자신과는 개인 채팅방을 만들 수 없습니다.");
         }
 
         User requester = getUser(requesterId);
@@ -50,7 +56,7 @@ public class DirectChatRoomService {
         return DirectChatMapper.toRoomResponse(
                 room,
                 requesterId,
-                latestMessage == null ? null : latestMessage.getMessage(),
+                latestMessage == null ? null : latestMessage.getContent(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }
@@ -66,7 +72,7 @@ public class DirectChatRoomService {
                     return DirectChatMapper.toRoomResponse(
                             room,
                             currentUserId,
-                            latestMessage == null ? null : latestMessage.getMessage(),
+                            latestMessage == null ? null : latestMessage.getContent(),
                             latestMessage == null ? null : latestMessage.getCreatedAt()
                     );
                 })
@@ -95,24 +101,24 @@ public class DirectChatRoomService {
     @Transactional
     public DirectChatMessageResponse saveDirectChatMessage(Long senderId, ChatMessageSendRequest request) {
         if (request.roomType() != ChatRoomType.DIRECT) {
-            throw new IllegalArgumentException("개인 채팅 메시지만 저장할 수 있습니다.");
+            throw new InvalidDirectChatRequestException("개인 채팅 메시지만 저장할 수 있습니다.");
         }
         if (request.roomId() == null) {
-            throw new IllegalArgumentException("개인 채팅방 ID는 필수입니다.");
+            throw new InvalidDirectChatRequestException("개인 채팅방 ID는 필수입니다.");
         }
         if (request.content() == null || request.content().isBlank()) {
-            throw new IllegalArgumentException("메시지 내용은 비어 있을 수 없습니다.");
+            throw new MessageBlankException("메시지 내용은 비어 있을 수 없습니다.");
         }
 
         DirectChatRoom room = getParticipatingRoom(senderId, request.roomId());
-        User writer = getUser(senderId);
+        User sender = getUser(senderId);
+        ChatMessageType messageType = request.messageType() == null ? ChatMessageType.TEXT : request.messageType();
 
         ChatMessages message = directChatMessageRepository.save(
                 ChatMessages.create(
                         room,
-                        writer,
-                        //request.messageType(),
-                        request.status(),
+                        sender,
+                        messageType,
                         request.content().trim()
                 )
         );
@@ -130,23 +136,23 @@ public class DirectChatRoomService {
         return DirectChatMapper.toRoomResponse(
                 room,
                 currentUserId,
-                latestMessage == null ? null : latestMessage.getMessage(),
+                latestMessage == null ? null : latestMessage.getContent(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }
 
     private DirectChatRoom getParticipatingRoom(Long userId, Long directChatRoomId) {
         DirectChatRoom room = directChatRoomRepository.findById(directChatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("개인 채팅방이 존재하지 않습니다. id=" + directChatRoomId));
+                .orElseThrow(() -> new DirectChatRoomNotFoundException("개인 채팅방이 존재하지 않습니다. id=" + directChatRoomId));
 
         if (!room.hasParticipant(userId)) {
-            throw new IllegalArgumentException("참여하지 않은 개인 채팅방에는 접근할 수 없습니다.");
+            throw new NotChatRoomMemberException("참여하지 않은 개인 채팅방에는 접근할 수 없습니다.");
         }
         return room;
     }
 
     private User getUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자가 존재하지 않습니다. id=" + userId));
+                .orElseThrow(() -> new UserNotFoundException("사용자가 존재하지 않습니다. id=" + userId));
     }
 }

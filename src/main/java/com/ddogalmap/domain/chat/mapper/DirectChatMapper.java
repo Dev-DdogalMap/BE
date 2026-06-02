@@ -4,6 +4,7 @@ import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
+import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.entity.User;
 
 import java.time.LocalDateTime;
@@ -27,6 +28,7 @@ public final class DirectChatMapper {
                 opponent.getProfileImageUrl(),
                 lastMessage,
                 lastMessageAt,
+                0,
                 room.getCreatedAt()
         );
     }
@@ -35,11 +37,11 @@ public final class DirectChatMapper {
         return new DirectChatMessageResponse(
                 message.getChatMessageId(),
                 message.getDirectChatRoom().getDirectChatRoomId(),
-                message.getWriter().getUserId(),
-                message.getWriter().getNickname(),
-                //message.getMessageType(),
-                message.getStatus(),
-                message.getMessage(),
+                message.getSender().getUserId(),
+                message.getSender().getNickname(),
+                message.getMessageType(),
+                Status.SENT,
+                message.getContent(),
                 message.getCreatedAt()
         );
     }

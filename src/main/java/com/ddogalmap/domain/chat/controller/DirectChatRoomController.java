@@ -1,8 +1,11 @@
 package com.ddogalmap.domain.chat.controller;
 
+import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.request.DirectChatMessageRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.service.DirectChatRoomService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,7 +25,7 @@ import java.util.List;
 
 @Tag(name = "Direct Chat", description = "1:1 채팅방 및 메시지 API")
 @RestController
-@RequestMapping("/api/direct-chat-rooms")
+@RequestMapping({"/api/direct-chat-rooms", "/api/direct-chats"})
 @RequiredArgsConstructor
 public class DirectChatRoomController {
 
@@ -78,5 +81,27 @@ public class DirectChatRoomController {
             @RequestParam(required = false) Integer size
     ) {
         return directChatRoomService.getDirectChatMessages(principal.userId(), directChatRoomId, size);
+    }
+
+    @Operation(
+            summary = "개인 채팅 메시지 저장",
+            description = "현재 로그인한 사용자가 참여 중인 1:1 채팅방에 메시지를 저장합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PostMapping("/{directChatRoomId}/messages")
+    public DirectChatMessageResponse saveDirectChatMessage(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long directChatRoomId,
+            @RequestBody DirectChatMessageRequest request
+    ) {
+        return directChatRoomService.saveDirectChatMessage(
+                principal.userId(),
+                new ChatMessageSendRequest(
+                        ChatRoomType.DIRECT,
+                        directChatRoomId,
+                        request.messageType(),
+                        request.message()
+                )
+        );
     }
 }

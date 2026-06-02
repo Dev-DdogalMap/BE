@@ -1,7 +1,6 @@
 package com.ddogalmap.domain.chat.entity;
 
 import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
-import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
 import jakarta.persistence.Column;
@@ -22,12 +21,13 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "chat_messages")
+@Table(name = "direct_chat_messages")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChatMessages extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "direct_chat_message_id")
     private Long chatMessageId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -35,41 +35,35 @@ public class ChatMessages extends BaseEntity {
     private DirectChatRoom directChatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "writer", nullable = false)
-    private User writer;
-
-    /*@Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ChatMessageType messageType;*/
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Status status;
+    private ChatMessageType messageType;
 
+    @Lob
     @Column(nullable = false)
-    private String message;
+    private String content;
 
     private ChatMessages(
             DirectChatRoom directChatRoom,
-            User writer,
-            //ChatMessageType messageType,
-            Status status,
-            String message
+            User sender,
+            ChatMessageType messageType,
+            String content
     ) {
         this.directChatRoom = directChatRoom;
-        this.writer = writer;
-        //this.messageType = messageType;
-        this.status = status;
-        this.message = message;
+        this.sender = sender;
+        this.messageType = messageType;
+        this.content = content;
     }
 
     public static ChatMessages create(
             DirectChatRoom directChatRoom,
-            User writer,
-            //ChatMessageType messageType,
-            Status status,
+            User sender,
+            ChatMessageType messageType,
             String content
     ) {
-        return new ChatMessages(directChatRoom, writer, /*messageType*/status, content);
+        return new ChatMessages(directChatRoom, sender, messageType, content);
     }
 }

@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface DirectChatMessageRepository extends JpaRepository<ChatMessages, Long> {
 
-    @EntityGraph(attributePaths = {"writer", "directChatRoom"})
+    @EntityGraph(attributePaths = {"sender", "directChatRoom"})
     @Query("""
             select m
             from ChatMessages m
@@ -29,6 +29,6 @@ public interface DirectChatMessageRepository extends JpaRepository<ChatMessages,
             """)
     List<ChatMessages> findAllByRoomOrderByRecent(@Param("roomId") Long roomId);
 
-    @EntityGraph(attributePaths = {"writer", "directChatRoom"})
+    @EntityGraph(attributePaths = {"sender", "directChatRoom"})
     Optional<ChatMessages> findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(Long roomId);
 }
