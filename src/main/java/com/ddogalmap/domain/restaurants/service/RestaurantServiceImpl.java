@@ -83,7 +83,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
 		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection);
 
-		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, phone: {}", response.restaurantId(), response.phone());
+		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
 
 		return response;
 	}
