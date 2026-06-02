@@ -66,17 +66,20 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 	Optional<RestaurantPreviewProjection> findRestaurantPreview(
 			@Param("restaurantId") Long restaurantId, @Param("lat") double lat, @Param("lng") double lng);
 
-	@Query("""
-			    SELECT
-			        r.restaurantId AS restaurantId,
-			        r.roadAddressName AS roadAddressName,
-			        r.phone AS phone,
-			        r.placeUrl AS placeUrl,
-			        r.x AS x,
-			        r.y AS y
-			    FROM Restaurant r
-			    WHERE r.restaurantId = :restaurantId
-			""")
+
+	@Query(value = """
+    SELECT
+        r.restaurant_id AS restaurantId,
+        r.place_name AS placeName,
+        r.road_address_name AS roadAddressName,
+        r.phone AS phone,
+        r.place_url AS placeUrl,
+        ST_Y(r.location::geometry) AS latitude,
+        ST_X(r.location::geometry) AS longitude
+    FROM restaurants r
+    WHERE r.restaurant_id = :restaurantId
+    """,
+			nativeQuery = true)
 	Optional<RestaurantInfoProjection> findRestaurantInfo(
 			@Param("restaurantId") Long restaurantId
 	);
