@@ -2,17 +2,17 @@ package com.ddogalmap.domain.restaurants.dto.projection;
 
 public interface RestaurantInfoProjection {
 
-    Long getRestaurantId();
+	Long getRestaurantId();
 
-    String getPlaceName();
+	String getPlaceName();
 
-    String getRoadAddressName();
+	String getRoadAddressName();
 
-    String getPhone();
+	String getPhone();
 
-    String getPlaceUrl();
+	String getPlaceUrl();
 
-    Double getLatitude();
+	Double getLatitude();
 
-    Double getLongitude();
+	Double getLongitude();
 }
