@@ -21,6 +21,8 @@ import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -178,6 +180,16 @@ public class ChatRoomsService {
                 room.getFoodType().getType(),
                 room.getRegion(),
                 memberInfos);
+    }
+
+    /**
+     * 그룹 채팅방 전체 목록 조회
+     */
+    public ChatRoomListResponse getChatRoomList(Pageable pageable) {
+        Slice<ChatRoomListThumbnailResponse> chatRoomSlice = chatRoomsRepository.findChatRoomListThumbnail(pageable);
+        List<ChatRoomListThumbnailResponse> chatRoomList = chatRoomSlice.stream().toList();
+
+        return new ChatRoomListResponse(chatRoomSlice.hasNext(), chatRoomList);
     }
 
     //채팅방 조회

@@ -1,10 +1,7 @@
 package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
-import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
-import com.ddogalmap.domain.chat.dto.groupChat.response.ChatRoomInfoResponse;
-import com.ddogalmap.domain.chat.dto.groupChat.response.CreateChatRoomResponse;
-import com.ddogalmap.domain.chat.dto.groupChat.response.JoinChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +10,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,7 +38,7 @@ public class ChatRoomsController {
     @PostMapping
     public CreateChatRoomResponse createChatRoom(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody CreateChatRoomRequest request
+            @RequestBody CreateChatRoomRequest request  //사진 추가해야함
     ) {
         return chatRoomsService.createChatRoom(principal.userId(), request);
     }
@@ -97,5 +97,18 @@ public class ChatRoomsController {
                 .orElseThrow(() -> new AccessDeniedException("토큰이 없습니다."));
 
         return ResponseEntity.ok(Map.of("accessToken", token));
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 전체 목록 조회",
+            description = "그룹 채팅방의 전체 목록을 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping
+    public ChatRoomListResponse getChatRoomList(
+            @PageableDefault(size = 20)  //20개씩 조회 기본값. sort는 쿼리에서 고정(클라이언트에서 지정불가)
+            Pageable pageable
+    ) {
+        return chatRoomsService.getChatRoomList(pageable);
     }
 }
