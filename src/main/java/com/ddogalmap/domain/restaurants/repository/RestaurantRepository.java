@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.restaurants.repository;
 
+import com.ddogalmap.domain.restaurants.dto.projection.RestaurantInfoProjection;
 import com.ddogalmap.domain.restaurants.dto.projection.RestaurantMapProjection;
 import com.ddogalmap.domain.restaurants.dto.projection.RestaurantPreviewProjection;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
@@ -41,8 +42,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     );
 
     @Query(value = """
-<<<<<<< Updated upstream
-=======
 			SELECT
 			    r.restaurant_id AS restaurantId,
 			    r.place_name AS placeName,
@@ -72,32 +71,10 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
 
     @Query(value = """
->>>>>>> Stashed changes
     SELECT
         r.restaurant_id AS restaurantId,
         r.place_name AS placeName,
-        ft.type AS foodType,
         r.road_address_name AS roadAddressName,
-<<<<<<< Updated upstream
-        CAST(
-            ST_Distance(
-                r.location,
-                ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
-            ) AS INTEGER
-        ) AS distance,
-        ROUND(AVG(rv.score), 1) AS averageScore,
-        COUNT(rv.review_id) AS reviewCount
-        FROM restaurants r
-        JOIN food_types ft
-            ON r.food_type_id = ft.food_type_id
-        LEFT JOIN reviews rv
-            ON rv.restaurant_id = r.restaurant_id
-        WHERE r.restaurant_id = :restaurantId
-        GROUP BY r.restaurant_id, r.place_name, ft.type, r.road_address_name, r.location
-    """, nativeQuery = true)
-    Optional<RestaurantPreviewProjection> findRestaurantPreview(
-            @Param("restaurantId") Long restaurantId,@Param("lat") double lat, @Param("lng") double lng);
-=======
         r.phone AS phone,
         r.place_url AS placeUrl,
         ST_Y(r.location::geometry) AS latitude,
@@ -141,5 +118,4 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             @Param("userLongitude") Double userLongitude
     );
 
->>>>>>> Stashed changes
 }
