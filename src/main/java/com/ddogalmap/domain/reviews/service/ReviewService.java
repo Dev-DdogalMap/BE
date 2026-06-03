@@ -24,8 +24,8 @@ public class ReviewService {
                 .score(request.score())
                 .isRevisit(request.isRevisit())
                 .content(request.content())
-                .userId(1L)
-                .restaurantId(1L)
+                .userId(request.userId())
+                .restaurantId(request.restaurantId())
                 .build();
 
         // 2. 전달받은 태그 문자열들을 Review 엔티티에 연관관계 편의 메서드로 주입
