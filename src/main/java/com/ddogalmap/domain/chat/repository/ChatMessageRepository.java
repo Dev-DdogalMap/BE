@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface DirectChatMessageRepository extends JpaRepository<ChatMessages, Long> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessages, Long> {
 
     @EntityGraph(attributePaths = {"sender", "directChatRoom"})
     @Query("""
@@ -31,4 +31,13 @@ public interface DirectChatMessageRepository extends JpaRepository<ChatMessages,
 
     @EntityGraph(attributePaths = {"sender", "directChatRoom"})
     Optional<ChatMessages> findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(Long roomId);
+
+    @EntityGraph(attributePaths = {"writer", "chatRoom"})
+    @Query("""
+            select m
+            from ChatMessages m
+            where m.chatRoom.id = :roomId
+            order by m.createdAt desc, m.chatMessageId desc
+            """)
+    List<ChatMessages> findGroupRecentMessages(@Param("roomId") Long roomId, Pageable pageable);
 }

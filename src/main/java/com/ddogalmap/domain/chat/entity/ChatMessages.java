@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.chat.entity;
 
 import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
+import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
 import jakarta.persistence.Column;
@@ -12,58 +13,69 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @Entity
-@Table(name = "direct_chat_messages")
+@Table(name = "chat_messages")
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class ChatMessages extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "direct_chat_message_id")
+    @Column(name = "chat_message_id")
     private Long chatMessageId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "direct_chat_room_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "direct_chat_room_id")
     private DirectChatRoom directChatRoom;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_room_id")
+    private ChatRooms chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    private User writer;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ChatMessageType messageType;
+    private ChatMessageType messageType = ChatMessageType.TEXT;
 
-    @Lob
-    @Column(nullable = false)
-    private String content;
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Status status = Status.SENT;
+
+    @Column(nullable = false, columnDefinition = "text")
+    private String message;
 
     private ChatMessages(
             DirectChatRoom directChatRoom,
-            User sender,
+            User writer,
             ChatMessageType messageType,
-            String content
+            Status status,
+            String message
     ) {
         this.directChatRoom = directChatRoom;
-        this.sender = sender;
+        this.writer = writer;
         this.messageType = messageType;
-        this.content = content;
+        this.status = status;
+        this.message = message;
     }
 
     public static ChatMessages create(
             DirectChatRoom directChatRoom,
-            User sender,
+            User writer,
             ChatMessageType messageType,
-            String content
+            Status status,
+            String message
     ) {
-        return new ChatMessages(directChatRoom, sender, messageType, content);
+        return new ChatMessages(directChatRoom, writer, messageType, status, message);
     }
 }

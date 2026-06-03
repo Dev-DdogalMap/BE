@@ -8,12 +8,13 @@ import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
+import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.chat.exception.DirectChatRoomNotFoundException;
 import com.ddogalmap.domain.chat.exception.InvalidDirectChatRequestException;
 import com.ddogalmap.domain.chat.exception.MessageBlankException;
 import com.ddogalmap.domain.chat.exception.NotChatRoomMemberException;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
-import com.ddogalmap.domain.chat.repository.DirectChatMessageRepository;
+import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
@@ -33,7 +34,7 @@ public class DirectChatRoomService {
     private static final int DEFAULT_MESSAGE_PAGE_SIZE = 50;
 
     private final DirectChatRoomRepository directChatRoomRepository;
-    private final DirectChatMessageRepository directChatMessageRepository;
+    private final ChatMessageRepository directChatMessageRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -56,7 +57,7 @@ public class DirectChatRoomService {
         return DirectChatMapper.toRoomResponse(
                 room,
                 requesterId,
-                latestMessage == null ? null : latestMessage.getContent(),
+                latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }
@@ -72,7 +73,7 @@ public class DirectChatRoomService {
                     return DirectChatMapper.toRoomResponse(
                             room,
                             currentUserId,
-                            latestMessage == null ? null : latestMessage.getContent(),
+                            latestMessage == null ? null : latestMessage.getMessage(),
                             latestMessage == null ? null : latestMessage.getCreatedAt()
                     );
                 })
@@ -119,6 +120,7 @@ public class DirectChatRoomService {
                         room,
                         sender,
                         messageType,
+                        Status.SENT,
                         request.content().trim()
                 )
         );
@@ -136,7 +138,7 @@ public class DirectChatRoomService {
         return DirectChatMapper.toRoomResponse(
                 room,
                 currentUserId,
-                latestMessage == null ? null : latestMessage.getContent(),
+                latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
     }
