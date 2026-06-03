@@ -29,8 +29,17 @@ public class JwtTokenProvider {
     }
 
     public UserRole getRole(String token) {
-        Claims claims = parseClaims(token);
-        return UserRole.valueOf(claims.get("role", String.class));
+        try {
+            Claims claims = parseClaims(token);
+            String roleStr = claims.get("role", String.class);
+
+            if (roleStr == null || roleStr.isBlank()) {
+                return null;
+            }
+            return UserRole.valueOf(roleStr);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public String createAccessToken(Long userId, UserRole role) {
@@ -53,8 +62,18 @@ public class JwtTokenProvider {
     }
 
     public Long getUserId(String token) {
-        Claims claims = parseClaims(token);
-        return Long.valueOf(claims.getSubject());
+        try {
+            Claims claims = parseClaims(token);
+            String subject = claims.getSubject();
+
+            // 문자열 "null"로 들어오거나 진짜 null인 경우 분기 처리
+            if (subject == null || subject.isBlank() || "null".equals(subject)) {
+                return null;
+            }
+            return Long.valueOf(subject);
+        } catch (Exception e) {
+            return null; // 파싱 중 에러 발생 시 예외를 던지지 않고 null 반환
+        }
     }
 
     public boolean validateToken(String token) {

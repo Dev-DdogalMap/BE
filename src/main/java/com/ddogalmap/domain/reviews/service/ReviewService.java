@@ -2,10 +2,12 @@ package com.ddogalmap.domain.reviews.service;
 
 import com.ddogalmap.domain.reviews.dto.request.ReviewRequest;
 import com.ddogalmap.domain.reviews.entity.Review;
+import com.ddogalmap.domain.reviews.entity.ReviewImg;
 import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,9 +15,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewRepository reviewRepository;
+    private final FileService fileService;
 
     @Transactional
-    public Long createReview(ReviewRequest request) {
+    public Long createReview(ReviewRequest request, List<MultipartFile> images) {
+
         Review review = Review.builder()
                 .score(request.score())
                 .isRevisit(request.isRevisit())
@@ -29,7 +33,20 @@ public class ReviewService {
             request.tags().forEach(review::addTag);
         }
 
-        Review savedReview = reviewRepository.save(review);
-        return savedReview.getReviewId();
+        // 이미지 저장
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile image : images) {
+                String storeFilename = fileService.saveFile(image);
+                String orgFilename = image.getOriginalFilename();
+                ReviewImg reviewImg = ReviewImg.builder()
+                        .imgUrl("/uploads/" + storeFilename)
+                        .orgImgName(orgFilename)
+                        .review(review)
+                        .build();
+                review.addImage(reviewImg); // 연관관계 편의 메서드 사용
+            }
+        }
+
+        return reviewRepository.save(review).getReviewId();
     }
 }

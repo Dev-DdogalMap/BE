@@ -14,30 +14,20 @@ import java.util.List;
 @Table(name = "reviews")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
-@Builder
-public class Review {
+public class Review extends BaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long reviewId;
 
     @Column(nullable = false)
-    private boolean isRevisit;
+    private Boolean isRevisit;
 
     @Column(nullable = false)
     private Integer score;
 
     @Column(nullable = false, length = 500)
     private String content;
-
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
 
     // 외래 키 관계 설정
     @Column(name = "user_id", nullable = false)
@@ -46,17 +36,35 @@ public class Review {
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
 
+
+
     // 태그 관련 설정
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     private List<Tag> tags = new ArrayList<>();
-
+    // 연관관계 편의 메서드
     public void addTag(String tagContent) {
         Tag tag = Tag.builder()
                 .content(tagContent)
                 .review(this)
                 .build();
         this.tags.add(tag);
+    }
+
+    // 이미지 관련 설정
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewImg> images = new ArrayList<>();
+    // 연관관계 편의 메서드
+    public void addImage(ReviewImg image) {
+        this.images.add(image);
+    }
+
+    @Builder
+    public Review(Integer score, String content, boolean isRevisit, Long userId, Long restaurantId) {
+        this.score = score;
+        this.content = content;
+        this.isRevisit = isRevisit;
+        this.userId = userId;
+        this.restaurantId = restaurantId;
     }
 
     // 연관 관계 매핑 (필요 시 주석 해제)
