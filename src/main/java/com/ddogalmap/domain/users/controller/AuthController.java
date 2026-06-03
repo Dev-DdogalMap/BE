@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -47,13 +48,22 @@ public class AuthController {
     ) throws IOException {
         LoginResponse loginResponse = authService.kakaoLogin(code);
 
-        Cookie accessTokenCookie = new Cookie("accessToken", loginResponse.accessToken());
+        /*Cookie accessTokenCookie = new Cookie("accessToken", loginResponse.accessToken());
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setSecure(true); // 로컬 http에서는 false
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge(60 * 60); // 1시간
-
         response.addCookie(accessTokenCookie);
+        */
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", loginResponse.accessToken())
+                .httpOnly(true)
+                .secure(true)  //로컬에서는 false
+                .path("/")
+                .maxAge(60 * 60)
+                .sameSite("None")
+                .build();
+
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
 
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(frontendUrl)
