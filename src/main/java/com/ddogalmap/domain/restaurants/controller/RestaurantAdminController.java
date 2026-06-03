@@ -24,7 +24,7 @@ public class RestaurantAdminController {
 
                     - 페이지당 1,000건씩 호출 (전체 약 53만 건 → 영업·휴업만 약 12~15만 건)
                     - food_type 자동 생성
-                    - 좌표(EPSG:2097) → WGS84(4326) 변환 (PostGIS ST_Transform)
+                    - 좌표(EPSG:5174) → WGS84(4326) 변환 (PostGIS ST_Transform)
                     - 중복(management_no 기준)은 ON CONFLICT DO NOTHING 으로 자동 스킵
                     - 예상 시간 20~30분
                     """

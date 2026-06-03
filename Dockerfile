@@ -36,7 +36,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
 
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-RUN chown spring:spring /app/app.jar
+RUN chown -R spring:spring /app
 
 USER spring
 

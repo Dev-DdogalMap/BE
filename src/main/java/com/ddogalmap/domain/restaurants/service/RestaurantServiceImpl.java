@@ -1,6 +1,8 @@
 package com.ddogalmap.domain.restaurants.service;
 
+import com.ddogalmap.domain.restaurants.dto.projection.RestaurantInfoProjection;
 import com.ddogalmap.domain.restaurants.dto.projection.RestaurantPreviewProjection;
+import com.ddogalmap.domain.restaurants.dto.response.RestaurantInfoResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantMapResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
@@ -55,7 +57,7 @@ public class RestaurantServiceImpl implements RestaurantService {
      * @return 식당 미리보기 정보
      */
     @Override
-    public RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, double lat, double lng) {
+    public RestaurantPreviewResponse getRestaurantPreview(Long restaurantId, Double lat, Double lng) {
         log.info("[RestaurantService] 식당 미리보기 조회 요청 - restaurantId: {}", restaurantId);
 
         RestaurantPreviewProjection projection =
@@ -68,6 +70,21 @@ public class RestaurantServiceImpl implements RestaurantService {
 
         log.info("[RestaurantService] 식당 미리보기 조회 완료 - restaurantId: {}, reviewCount: {}", response.restaurantId(), response.reviewCount());
 
-        return response;
-    }
+		return response;
+	}
+
+	@Override
+	public RestaurantInfoResponse getRestaurantInfo(Long restaurantId) {
+
+		log.info("[RestaurantService] 식당 정보 조회 요청 - restaurantId: {}", restaurantId);
+
+		RestaurantInfoProjection projection = restaurantRepository.findRestaurantInfo(restaurantId)
+				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
+
+		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection);
+
+		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
+
+		return response;
+	}
 }
