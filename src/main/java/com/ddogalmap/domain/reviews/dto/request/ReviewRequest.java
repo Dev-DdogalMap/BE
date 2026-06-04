@@ -1,8 +1,6 @@
 package com.ddogalmap.domain.reviews.dto.request;
 
 import jakarta.validation.constraints.*;
-import lombok.Setter;
-import org.aspectj.bridge.Message;
 
 import java.util.List;
 
