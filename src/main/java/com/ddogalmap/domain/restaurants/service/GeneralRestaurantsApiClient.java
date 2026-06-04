@@ -77,7 +77,8 @@ public class GeneralRestaurantsApiClient {
         } catch (Exception e) {
             log.error("General restaurants API call failed at page {} size {}: {}",
                     pageNo, numOfRows, e.getMessage());
-            return new GeneralRestaurantsPageResponse(0, Collections.emptyList());
+            throw new RuntimeException(
+                    "General restaurants API call failed at page " + pageNo, e);
         }
 
         if (response == null) {

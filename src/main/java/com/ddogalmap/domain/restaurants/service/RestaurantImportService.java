@@ -147,7 +147,8 @@ public class RestaurantImportService {
             log.info("national page {}: fetched={}, inserted total={}, skippedState total={}, skippedCoord total={}",
                     pageNo, items.size(), totalInserted, skippedByState, skippedByCoord);
 
-            if (items.isEmpty() || totalFetched >= totalCount) break;
+            if (items.isEmpty()) break;
+            if (totalCount > 0 && totalFetched >= totalCount) break;
             pageNo++;
             sleepQuietly(INTER_CALL_SLEEP_MS);
         }
