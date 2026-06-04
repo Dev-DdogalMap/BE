@@ -39,7 +39,7 @@ public class ChatMessages extends BaseEntity {
     private ChatRooms chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "writer", nullable = false)
     private User writer;
 
     @Builder.Default
