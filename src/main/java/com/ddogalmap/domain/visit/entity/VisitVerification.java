@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "visit_verification")
+@Table(name = "visit_verifications")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VisitVerification extends BaseEntity {
 
