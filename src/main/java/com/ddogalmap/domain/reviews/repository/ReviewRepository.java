@@ -1,12 +1,48 @@
 package com.ddogalmap.domain.reviews.repository;
 
 import com.ddogalmap.domain.reviews.entity.Review;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
     // 특정 식당의 리뷰를 최신슨 둥의 조건에 맞춰 페이징 조회
     Slice<Review> findByRestaurantId(Long restaurantId, Pageable pageable);
+
+    @Query(value = """
+        SELECT ri.img_url
+        FROM reviews r
+        JOIN review_imgs ri
+            ON ri.review_id = r.review_id
+        JOIN likes l
+            ON l.review_id = r.review_id
+        WHERE r.restaurant_id = :restaurantId
+        GROUP BY r.review_id, ri.img_id, ri.img_url
+        HAVING COUNT(l.like_id) >= 10
+        ORDER BY COUNT(l.like_id) DESC,
+                 r.review_id DESC,
+                 ri.img_id ASC
+        LIMIT 1
+    """, nativeQuery = true)
+    Optional<String> findRepresentativeImageUrl(@Param("restaurantId") Long restaurantId);
+
+    @Query(value = """
+        SELECT t.content
+        FROM tags t
+        JOIN reviews r
+            ON r.review_id = t.review_id
+        WHERE r.restaurant_id = :restaurantId
+        GROUP BY t.content
+        ORDER BY COUNT(*) DESC,
+                 t.content ASC
+        LIMIT 3
+    """, nativeQuery = true)
+    List<String> findTop3TagsByRestaurantId(
+            @Param("restaurantId") Long restaurantId
+    );
 }
