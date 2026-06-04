@@ -41,7 +41,10 @@ public class SecurityConfig {
                                 "/actuator/health"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/kakao/**").permitAll()
+                        .requestMatchers("/api/auth/kakao/**",
+                                "/api/auth/refresh",
+                                "/api/auth/logout")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
@@ -51,6 +54,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/restaurants/*/review")
                         .authenticated()
+                                "/api/restaurants/*/info",
+                                "/api/restaurants/search",
+                                "/api/food-types")
+                        .permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )

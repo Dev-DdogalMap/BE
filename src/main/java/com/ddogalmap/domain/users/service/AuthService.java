@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.users.service;
 
-import com.ddogalmap.domain.users.dto.response.LoginResponse;
+import com.ddogalmap.domain.users.dto.response.AccessTokenResponse;
+import com.ddogalmap.domain.users.dto.response.LoginTokenResult;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import com.ddogalmap.global.security.jwt.JwtTokenProvider;
@@ -53,7 +54,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse kakaoLogin(String code) {
+    public LoginTokenResult kakaoLogin(String code) {
         String kakaoAccessToken = getKakaoAccessToken(code);
         Map<String, Object> kakaoUserInfo = getKakaoUserInfo(kakaoAccessToken);
 
@@ -79,14 +80,66 @@ public class AuthService {
                         User.createKakaoUser(kakaoId, email, nickname, profileImageUrl)
                 ));
 
-        String accessToken = jwtTokenProvider.createAccessToken(user.getUserId(), user.getRole());
+        String accessToken = jwtTokenProvider.createAccessToken(
+                user.getUserId(),
+                user.getRole()
+        );
 
-        return new LoginResponse(
+        String refreshToken = jwtTokenProvider.createRefreshToken(
+                user.getUserId(),
+                user.getRole()
+        );
+
+        return new LoginTokenResult(
                 accessToken,
+                refreshToken,
                 user.getUserId(),
                 user.getNickname(),
                 user.getProfileImageUrl()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public AccessTokenResponse refreshAccessToken(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new IllegalArgumentException("Refresh Token이 없습니다.");
+        }
+
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 Refresh Token입니다.");
+        }
+
+        if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
+            throw new IllegalArgumentException("Refresh Token 타입이 아닙니다.");
+        }
+
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(
+                user.getUserId(),
+                user.getRole()
+        );
+
+        return new AccessTokenResponse(
+                newAccessToken,
+                user.getUserId(),
+                user.getNickname(),
+                user.getProfileImageUrl()
+        );
+    }
+
+    @Transactional
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return;
+        }
+
+        // 지금은 refreshToken을 DB/Redis에 저장하지 않는 구조라서
+        // 서버에서 삭제할 데이터는 없음.
+        // 나중에 refreshToken을 Redis나 DB에 저장하면 여기서 삭제 처리하면 됨.
     }
 
     private String getKakaoAccessToken(String code) {

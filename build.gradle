@@ -18,8 +18,6 @@ repositories {
     mavenCentral()
 }
 
-// 💡 기존의 dependencyManagement 블록은 플러그인 충돌 우려로 인해 삭제합니다.
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -46,7 +44,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    // Querydsl 의존성 추가
+    // 💡 Querydsl 의존성 추가 (Spring Boot 3.x 버전 이상 규격)
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
     annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
 
@@ -57,6 +55,8 @@ dependencies {
     // 💡 S3 의존성 수정
     // 의존성 주입 플러그인의 버전 유실 문제를 방지하기 위해 호환 버전을 직접 명시합니다.
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.3.0'
+    implementation 'software.amazon.awssdk:s3:2.25.27'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 }
 
 tasks.named('test') {
