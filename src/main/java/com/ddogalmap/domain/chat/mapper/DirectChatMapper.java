@@ -27,6 +27,7 @@ public final class DirectChatMapper {
                 opponent.getProfileImageUrl(),
                 lastMessage,
                 lastMessageAt,
+                0,
                 room.getCreatedAt()
         );
     }
@@ -37,7 +38,7 @@ public final class DirectChatMapper {
                 message.getDirectChatRoom().getDirectChatRoomId(),
                 message.getWriter().getUserId(),
                 message.getWriter().getNickname(),
-                //message.getMessageType(),
+                message.getMessageType(),
                 message.getStatus(),
                 message.getMessage(),
                 message.getCreatedAt()
