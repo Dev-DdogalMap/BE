@@ -18,6 +18,9 @@ public class WebClientConfig {
     @Value("${seoul-open-api.base-url}")
     private String seoulOpenApiBaseUrl;
 
+    @Value("${general-restaurants-api.base-url}")
+    private String generalRestaurantsApiBaseUrl;
+
     @Bean(name = "seoulOpenApiWebClient")
     public WebClient seoulOpenApiWebClient() {
         HttpClient httpClient = HttpClient.create()
@@ -28,6 +31,23 @@ public class WebClientConfig {
 
         return WebClient.builder()
                 .baseUrl(seoulOpenApiBaseUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .codecs(configurer -> configurer
+                        .defaultCodecs()
+                        .maxInMemorySize(16 * 1024 * 1024))
+                .build();
+    }
+
+    @Bean(name = "generalRestaurantsWebClient")
+    public WebClient generalRestaurantsWebClient() {
+        HttpClient httpClient = HttpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10_000)
+                .doOnConnected(conn -> conn
+                        .addHandlerLast(new ReadTimeoutHandler(30, TimeUnit.SECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(30, TimeUnit.SECONDS)));
+
+        return WebClient.builder()
+                .baseUrl(generalRestaurantsApiBaseUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .codecs(configurer -> configurer
                         .defaultCodecs()

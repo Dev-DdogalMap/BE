@@ -38,6 +38,8 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
                 left join %1$s.user_levels ul on ul.user_id = u.user_id
                 left join %1$s.levels l on l.level_id = ul.level_id
                 left join %1$s.reviews r on r.user_id = u.user_id
+                left join %1$s.restaurants rt on rt.restaurant_id = r.restaurant_id
+                left join %1$s.food_types ft on ft.food_type_id = rt.food_type_id
                 left join %1$s.visit_verification vv on vv.user_id = u.user_id
                 where (cast(:keyword as text) is null or u.nickname ilike cast(:keyword as text))
                     and (cast(:region as text) is null or u.region = cast(:region as text))
@@ -56,16 +58,23 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
                     count(distinct r.review_id) as review_count,
                     count(distinct vv.visit_verification_id) as visit_verification_count,
                     coalesce(avg(r.score), 0) as rating_average,
-                    case
-                        when u.nickname ilike '%%카페%%' then '카페 전문'
-                        when u.nickname ilike '%%한식%%' then '한식 전문'
-                        when u.nickname ilike '%%술%%' then '술집 전문'
-                        when u.nickname ilike '%%양식%%' then '양식 전문'
-                        else '양식 전문'
-                    end as specialty,
+                    coalesce(
+                        (
+                            select concat(ft2.type, ' 전문')
+                            from %1$s.reviews r2
+                            join %1$s.restaurants rt2 on rt2.restaurant_id = r2.restaurant_id
+                            join %1$s.food_types ft2 on ft2.food_type_id = rt2.food_type_id
+                            where r2.user_id = u.user_id
+                            group by ft2.type
+                            order by count(*) desc, max(r2.created_at) desc
+                            limit 1
+                        ),
+                        '전문 분야 준비중'
+                    ) as specialty,
                     case when count(distinct vv.visit_verification_id) > 0 then true else false end as is_certified,
                     u.created_at as user_created_at
                 """
+                .formatted(schema)
                 + baseFromWhere
                 + """
                 group by
