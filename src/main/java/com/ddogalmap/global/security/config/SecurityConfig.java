@@ -41,7 +41,10 @@ public class SecurityConfig {
                                 "/actuator/health"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/kakao/**").permitAll()
+                        .requestMatchers("/api/auth/kakao/**",
+                                "/api/auth/refresh",
+                                "/api/auth/logout")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",

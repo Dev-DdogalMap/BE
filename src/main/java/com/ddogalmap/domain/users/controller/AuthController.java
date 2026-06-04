@@ -1,19 +1,24 @@
 package com.ddogalmap.domain.users.controller;
 
-import com.ddogalmap.domain.users.dto.response.LoginResponse;
+import com.ddogalmap.domain.users.dto.response.AccessTokenResponse;
+import com.ddogalmap.domain.users.dto.response.LoginTokenResult;
 import com.ddogalmap.domain.users.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.Arrays;
 
 @Slf4j
 @Tag(name = "Auth", description = "인증 관련 API")
@@ -21,6 +26,8 @@ import java.io.IOException;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     private final AuthService authService;
 
@@ -39,39 +46,31 @@ public class AuthController {
 
     @Operation(
             summary = "카카오 로그인 콜백",
-            description = "카카오 인가 코드를 받아 로그인 처리 후 JWT를 쿠키에 저장하고 프론트 성공 페이지로 리다이렉트합니다."
+            description = "카카오 인가 코드를 받아 로그인 처리 후 Refresh Token을 쿠키에 저장하고 프론트 성공 페이지로 리다이렉트합니다."
     )
     @GetMapping("/kakao/callback")
     public void kakaoCallback(
             @RequestParam String code,
             HttpServletResponse response
     ) throws IOException {
-        LoginResponse loginResponse = authService.kakaoLogin(code);
+        LoginTokenResult loginResult = authService.kakaoLogin(code);
 
-        /*Cookie accessTokenCookie = new Cookie("accessToken", loginResponse.accessToken());
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(!frontendUrl.startsWith("http://localhost"));
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge(60 * 60); // 1시간
-        response.addCookie(accessTokenCookie);
-        */
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", loginResponse.accessToken())
+        ResponseCookie refreshTokenCookie = ResponseCookie.from(
+                        REFRESH_TOKEN_COOKIE_NAME,
+                        loginResult.refreshToken()
+                )
                 .httpOnly(true)
-                .secure(true)  //로컬에서는 false
-                .path("/")
-                .maxAge(60 * 60)
-                .sameSite("None")
+                .secure(isSecureCookie())
+                .sameSite(cookieSameSite())
+                .path("/api/auth/refresh")
+                .maxAge(Duration.ofDays(14))
                 .build();
 
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         String redirectUrl = UriComponentsBuilder
                 .fromUriString(frontendUrl)
                 .path("/oauth/success")
-                .queryParam("accessToken", loginResponse.accessToken())
-                .queryParam("userId", loginResponse.userId())
-                .queryParam("nickname", loginResponse.nickname())
-                .queryParam("profileImageUrl", loginResponse.profileImageUrl())
                 .build()
                 .toUriString();
 
@@ -81,15 +80,56 @@ public class AuthController {
         response.sendRedirect(redirectUrl);
     }
 
-    @Operation(summary = "로그아웃", description = "Access Token 쿠키를 삭제합니다.")
-    @PostMapping("/logout")
-    public void logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("accessToken", null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
+    @Operation(
+            summary = "Access Token 재발급",
+            description = "Refresh Token 쿠키를 검증한 뒤 새로운 Access Token을 응답 body로 내려줍니다."
+    )
+    @PostMapping("/refresh")
+    public AccessTokenResponse refresh(HttpServletRequest request) {
+        String refreshToken = resolveRefreshToken(request);
+        return authService.refreshAccessToken(refreshToken);
+    }
 
-        response.addCookie(cookie);
+    @Operation(summary = "로그아웃", description = "Refresh Token 쿠키를 삭제합니다.")
+    @PostMapping("/logout")
+    public void logout(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        String refreshToken = resolveRefreshToken(request);
+
+        if (refreshToken != null) {
+            authService.logout(refreshToken);
+        }
+
+        ResponseCookie deleteCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(isSecureCookie())
+                .sameSite(cookieSameSite())
+                .path("/api/auth/refresh")
+                .maxAge(0)
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+    }
+
+    private String resolveRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        return Arrays.stream(request.getCookies())
+                .filter(cookie -> REFRESH_TOKEN_COOKIE_NAME.equals(cookie.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean isSecureCookie() {
+        return !frontendUrl.startsWith("http://localhost");
+    }
+
+    private String cookieSameSite() {
+        return isSecureCookie() ? "None" : "Lax";
     }
 }
