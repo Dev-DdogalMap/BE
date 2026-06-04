@@ -206,8 +206,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             @Param("keyword") String keyword,
             @Param("region") String region,
             @Param("foodTypeId") Long foodTypeId,
-            @Param("lat") double lat,
-            @Param("lng") double lng,
+            @Param("lat") Double lat,
+            @Param("lng") Double lng,
             @Param("sort") String sort,
             @Param("size") int size,
             @Param("offset") int offset
