@@ -47,7 +47,7 @@ public class ChatMessages extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Status status = Status.SENT;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(nullable = false, length = 255)
     private String message;
 
     private ChatMessages(

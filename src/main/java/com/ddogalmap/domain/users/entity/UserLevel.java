@@ -32,5 +32,5 @@ public class UserLevel {
     private Level level;
 
     @Column(nullable = false)
-    private Long exp;
+    private Integer exp;
 }
