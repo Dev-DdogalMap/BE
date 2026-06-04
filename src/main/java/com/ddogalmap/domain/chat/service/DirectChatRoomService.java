@@ -6,7 +6,6 @@ import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
-import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.chat.exception.DirectChatRoomNotFoundException;
@@ -113,13 +112,10 @@ public class DirectChatRoomService {
 
         DirectChatRoom room = getParticipatingRoom(senderId, request.roomId());
         User sender = getUser(senderId);
-        ChatMessageType messageType = request.messageType() == null ? ChatMessageType.TEXT : request.messageType();
-
         ChatMessages message = directChatMessageRepository.save(
                 ChatMessages.create(
                         room,
                         sender,
-                        messageType,
                         Status.SENT,
                         request.content().trim()
                 )

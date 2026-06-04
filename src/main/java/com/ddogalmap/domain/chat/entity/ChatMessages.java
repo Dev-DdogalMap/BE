@@ -1,6 +1,5 @@
 package com.ddogalmap.domain.chat.entity;
 
-import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
 import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
@@ -42,10 +41,6 @@ public class ChatMessages extends BaseEntity {
     @JoinColumn(name = "writer", nullable = false)
     private User writer;
 
-    @Builder.Default
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ChatMessageType messageType = ChatMessageType.TEXT;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
@@ -58,13 +53,11 @@ public class ChatMessages extends BaseEntity {
     private ChatMessages(
             DirectChatRoom directChatRoom,
             User writer,
-            ChatMessageType messageType,
             Status status,
             String message
     ) {
         this.directChatRoom = directChatRoom;
         this.writer = writer;
-        this.messageType = messageType;
         this.status = status;
         this.message = message;
     }
@@ -72,10 +65,9 @@ public class ChatMessages extends BaseEntity {
     public static ChatMessages create(
             DirectChatRoom directChatRoom,
             User writer,
-            ChatMessageType messageType,
             Status status,
             String message
     ) {
-        return new ChatMessages(directChatRoom, writer, messageType, status, message);
+        return new ChatMessages(directChatRoom, writer, status, message);
     }
 }
