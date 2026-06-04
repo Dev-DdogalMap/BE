@@ -45,11 +45,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
-                                "/api/restaurants/*/preview")
-                        .permitAll()
+                                "/api/restaurants/*/preview",
+                                "/api/restaurants/*/reviews"
+                        ).permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/review")
-                        .permitAll()
+                                "/api/restaurants/*/review")
+                        .authenticated()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -77,5 +78,11 @@ public class SecurityConfig {
 
             return config;
         };
+    }
+
+    @Bean
+    public org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring()
+                .requestMatchers("/uploads/**"); // /uploads로 시작하는 정적 파일 요청은 시큐리티 자체를 우회합니다.
     }
 }

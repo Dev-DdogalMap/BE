@@ -28,7 +28,18 @@ spring:
         highlight_sql: true
         jdbc:
           time_zone: Asia/Seoul
+        default_batch_fetch_size: 100
     open-in-view: false
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY_ID}
+        secret-key: ${AWS_SECRET_ACCESS_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        bucket: ddogalmap-images
 
 jwt:
   secret: ${JWT_SECRET:ddogalmap-jwt-secret-key-must-be-at-least-32-characters}

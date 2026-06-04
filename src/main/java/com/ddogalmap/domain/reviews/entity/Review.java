@@ -1,6 +1,8 @@
 package com.ddogalmap.domain.reviews.entity;
 
+import com.ddogalmap.domain.restaurants.entity.Restaurant;
 import com.ddogalmap.domain.reviews.BaseEntity;
+import com.ddogalmap.domain.users.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,7 +23,7 @@ public class Review extends BaseEntity{
     private Long reviewId;
 
     @Column(nullable = false)
-    private Boolean isRevisit;
+    private Boolean isRevisit = false;
 
     @Column(nullable = false)
     private Integer score;
@@ -68,7 +70,7 @@ public class Review extends BaseEntity{
     }
 
     // 연관 관계 매핑 (필요 시 주석 해제)
-    /*
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
@@ -76,5 +78,4 @@ public class Review extends BaseEntity{
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "restaurant_id", insertable = false, updatable = false)
     private Restaurant restaurant;
-    */
 }
