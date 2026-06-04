@@ -56,6 +56,13 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
                     count(distinct r.review_id) as review_count,
                     count(distinct vv.visit_verification_id) as visit_verification_count,
                     coalesce(avg(r.score), 0) as rating_average,
+                    case
+                        when u.nickname ilike '%%카페%%' then '카페 전문'
+                        when u.nickname ilike '%%한식%%' then '한식 전문'
+                        when u.nickname ilike '%%술%%' then '술집 전문'
+                        when u.nickname ilike '%%양식%%' then '양식 전문'
+                        else '양식 전문'
+                    end as specialty,
                     case when count(distinct vv.visit_verification_id) > 0 then true else false end as is_certified,
                     u.created_at as user_created_at
                 """
@@ -114,7 +121,7 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
                     rs.getLong("review_count"),
                     rs.getLong("visit_verification_count"),
                     rs.getDouble("rating_average"),
-                    null,
+                    rs.getString("specialty"),
                     rs.getBoolean("is_certified")
             );
         }
