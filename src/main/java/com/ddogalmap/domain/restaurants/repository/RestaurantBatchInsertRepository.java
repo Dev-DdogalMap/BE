@@ -13,7 +13,7 @@ import java.util.List;
  *
  * - JPA를 우회하여 JdbcTemplate 으로 직접 SQL 실행 (IDENTITY 전략 + Hibernate batch 불가 회피)
  * - 한 번의 SQL 호출로 N건 INSERT → JDBC round-trip 1/N
- * - 좌표는 ST_Transform 으로 EPSG:2097 → 4326 변환을 같은 SQL 안에서 처리
+ * - 좌표는 ST_Transform 으로 EPSG:5174 → 4326 변환을 같은 SQL 안에서 처리
  *   (x 또는 y 가 NULL 이면 ST_MakePoint 가 NULL 반환 → location 도 NULL)
  * - ON CONFLICT (management_no) DO NOTHING 으로 중복 행은 자동 스킵
  */
@@ -29,7 +29,7 @@ public class RestaurantBatchInsertRepository {
 
     private static final String VALUES_TEMPLATE =
             "(?, ?, ?, ?, ?, ?, ?, ?, " +
-            "ST_Transform(ST_SetSRID(ST_MakePoint(?, ?), 2097), 4326)::geography, " +
+            "ST_Transform(ST_SetSRID(ST_MakePoint(?, ?), 5174), 4326)::geography, " +
             "?, NOW(), NOW())";
 
     private static final String ON_CONFLICT_SUFFIX = " ON CONFLICT (management_no) DO NOTHING";
