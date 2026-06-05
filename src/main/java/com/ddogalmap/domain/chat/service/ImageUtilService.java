@@ -21,8 +21,8 @@ public class ImageUtilService {
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
-    @Value("${spring.cloud.aws.region.static}")
-    private String region;
+    @Value("${spring.cloud.aws.s3.cloudfront-url}")
+    private String domain;
 
     public UrlDto generatePresignedUrl(String folder, String originalFilename) {
         //파일 이름 형식 예외처리
@@ -48,6 +48,6 @@ public class ImageUtilService {
     }
 
     public String getImageUrl(String key) {
-        return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
+        return domain + key;
     }
 }
