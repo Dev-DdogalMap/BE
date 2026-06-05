@@ -1,6 +1,5 @@
 package com.ddogalmap.domain.chat.entity;
 
-import com.ddogalmap.domain.chat.enumtype.ChatMessageType;
 import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
@@ -13,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.*;
@@ -28,41 +26,38 @@ public class ChatMessages extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "chat_message_id")
     private Long chatMessageId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "direct_chat_room_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "direct_chat_room_id")
     private DirectChatRoom directChatRoom;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "chat_room_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "chat_room_id")
     private ChatRooms chatRoom;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "writer", nullable = false)
     private User writer;
 
-    /*@Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ChatMessageType messageType;*/
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Status status;
+    private Status status = Status.SENT;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String message;
 
     private ChatMessages(
             DirectChatRoom directChatRoom,
             User writer,
-            //ChatMessageType messageType,
             Status status,
             String message
     ) {
         this.directChatRoom = directChatRoom;
         this.writer = writer;
-        //this.messageType = messageType;
         this.status = status;
         this.message = message;
     }
@@ -70,10 +65,9 @@ public class ChatMessages extends BaseEntity {
     public static ChatMessages create(
             DirectChatRoom directChatRoom,
             User writer,
-            //ChatMessageType messageType,
             Status status,
-            String content
+            String message
     ) {
-        return new ChatMessages(directChatRoom, writer, /*messageType*/status, content);
+        return new ChatMessages(directChatRoom, writer, status, message);
     }
 }
