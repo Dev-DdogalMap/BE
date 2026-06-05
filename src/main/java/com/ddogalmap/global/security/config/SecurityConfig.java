@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview",
-                                "/api/restaurants/*/reviews"
+                                "/api/restaurants/*/reviews",
+                                "/api/regions/tree"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/restaurants/*/review")
