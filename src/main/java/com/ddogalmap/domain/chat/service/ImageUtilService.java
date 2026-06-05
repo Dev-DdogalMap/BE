@@ -48,6 +48,13 @@ public class ImageUtilService {
     }
 
     public String getImageUrl(String key) {
-        return domain + key;
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        // domain 끝 슬래시 제거
+        String normalizedDomain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
+        // key 앞에 슬래시 보장
+        String normalizedKey = key.startsWith("/") ? key : "/" + key;
+        return normalizedDomain + normalizedKey;
     }
 }
