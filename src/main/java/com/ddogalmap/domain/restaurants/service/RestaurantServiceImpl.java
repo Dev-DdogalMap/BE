@@ -69,7 +69,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
         RestaurantPreviewResponse response =
-                RestaurantPreviewResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
+                RestaurantPreviewResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags);
 
         log.info("[RestaurantService] 식당 미리보기 조회 완료 - restaurantId: {}, reviewCount: {}", response.restaurantId(), response.reviewCount());
 
@@ -86,7 +86,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
         RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
-		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
+		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags);
 
 		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
 

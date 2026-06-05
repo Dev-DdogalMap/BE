@@ -61,12 +61,45 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                 )
             END AS distance,
             ROUND(AVG(rv.score), 1) AS averageScore,
-            COUNT(rv.review_id) AS reviewCount
+            COUNT(DISTINCT rv.review_id) AS reviewCount,
+
+            -- 전체 맛집지수 (검색 SQL 산식과 동일: 4-factor 가중합, 소수 첫째자리)
+            ROUND(
+                (CAST(
+                    (CASE
+                        WHEN COUNT(DISTINCT CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.review_id END) > 0
+                        THEN AVG(CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.score END) * 20
+                        ELSE 0
+                    END) * 0.4
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.review_id) > 0
+                        THEN COUNT(DISTINCT CASE WHEN rv.is_revisit = TRUE THEN rv.review_id END) * 100.0 / COUNT(DISTINCT rv.review_id)
+                        ELSE 0
+                    END) * 0.3
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.review_id) > 0
+                        THEN AVG(rv.score) * 20
+                        ELSE 0
+                    END) * 0.2
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.user_id) > 0
+                        THEN COUNT(DISTINCT CASE WHEN b.user_id = rv.user_id THEN rv.user_id END) * 100.0 / COUNT(DISTINCT rv.user_id)
+                        ELSE 0
+                    END) * 0.1
+                AS NUMERIC))
+            , 1) AS foodScore
         FROM restaurants r
         JOIN food_types ft
             ON r.food_type_id = ft.food_type_id
         LEFT JOIN reviews rv
             ON rv.restaurant_id = r.restaurant_id
+        LEFT JOIN bookmarks b
+            ON b.restaurant_id = r.restaurant_id
+        LEFT JOIN users u
+            ON u.user_id = rv.user_id
         WHERE r.restaurant_id = :restaurantId
         GROUP BY r.restaurant_id, r.place_name, ft.type, r.road_address_name, r.location
     """, nativeQuery = true)
@@ -96,12 +129,74 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                 )
             END AS distance,
             ROUND(AVG(rv.score), 1) AS averageScore,
-            COUNT(rv.review_id) AS reviewCount
+            COUNT(DISTINCT rv.review_id) AS reviewCount,
+
+            -- 주민 추천 비율 (0~100, 별점 100점 환산)
+            CAST(
+                CASE
+                    WHEN COUNT(DISTINCT CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.review_id END) > 0
+                    THEN ROUND(AVG(CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.score END) * 20)
+                    ELSE 0
+                END AS INTEGER
+            ) AS residentRecommendRate,
+
+            -- 재방문율 (is_revisit=TRUE 비율, 0~100)
+            CAST(
+                CASE
+                    WHEN COUNT(DISTINCT rv.review_id) > 0
+                    THEN ROUND(
+                        COUNT(DISTINCT CASE WHEN rv.is_revisit = TRUE THEN rv.review_id END) * 100.0
+                        / COUNT(DISTINCT rv.review_id)
+                    )
+                    ELSE 0
+                END AS INTEGER
+            ) AS revisitRate,
+
+            -- 방문 인증 수
+            COUNT(DISTINCT vv.visit_verification_id) AS visitVerifyCount,
+
+            -- 즐겨찾기 수
+            COUNT(DISTINCT b.bookmark_id) AS bookmarkCount,
+
+            -- 전체 맛집지수 (4-factor 가중합, 소수 첫째자리)
+            ROUND(
+                CAST(
+                    (CASE
+                        WHEN COUNT(DISTINCT CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.review_id END) > 0
+                        THEN AVG(CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.score END) * 20
+                        ELSE 0
+                    END) * 0.4
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.review_id) > 0
+                        THEN COUNT(DISTINCT CASE WHEN rv.is_revisit = TRUE THEN rv.review_id END) * 100.0 / COUNT(DISTINCT rv.review_id)
+                        ELSE 0
+                    END) * 0.3
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.review_id) > 0
+                        THEN AVG(rv.score) * 20
+                        ELSE 0
+                    END) * 0.2
+                    +
+                    (CASE
+                        WHEN COUNT(DISTINCT rv.user_id) > 0
+                        THEN COUNT(DISTINCT CASE WHEN b.user_id = rv.user_id THEN rv.user_id END) * 100.0 / COUNT(DISTINCT rv.user_id)
+                        ELSE 0
+                    END) * 0.1
+                AS NUMERIC)
+            , 1) AS foodScore
         FROM restaurants r
         JOIN food_types ft
             ON r.food_type_id = ft.food_type_id
         LEFT JOIN reviews rv
             ON rv.restaurant_id = r.restaurant_id
+        LEFT JOIN bookmarks b
+            ON b.restaurant_id = r.restaurant_id
+        LEFT JOIN users u
+            ON u.user_id = rv.user_id
+        LEFT JOIN visit_verifications vv
+            ON vv.restaurant_id = r.restaurant_id
         WHERE r.restaurant_id = :restaurantId
         GROUP BY
             r.restaurant_id,
@@ -112,7 +207,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             r.place_url,
             r.location
     """, nativeQuery = true)
-        Optional<RestaurantInfoProjection> findRestaurantInfo(
+    Optional<RestaurantInfoProjection> findRestaurantInfo(
                 @Param("restaurantId") Long restaurantId,
                 @Param("lat") Double lat,
                 @Param("lng") Double lng
@@ -175,12 +270,16 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                 CAST(
                     ROUND(
                         (CASE
-                            WHEN COUNT(DISTINCT CASE WHEN r.address_name LIKE CONCAT('%', u.region, '%') THEN rv.review_id END) > 0
-                            THEN AVG(CASE WHEN r.address_name LIKE CONCAT('%', u.region, '%') THEN rv.score END) * 20
+                            WHEN COUNT(DISTINCT CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.review_id END) > 0
+                            THEN AVG(CASE WHEN (u.region IS NOT NULL AND r.address_name LIKE CONCAT('%', u.region, '%')) THEN rv.score END) * 20
                             ELSE 0
                         END) * 0.4
                         +
-                        0 * 0.3
+                        (CASE
+                        WHEN COUNT(DISTINCT rv.review_id) > 0
+                        THEN COUNT(DISTINCT CASE WHEN rv.is_revisit = TRUE THEN rv.review_id END) * 100.0 / COUNT(DISTINCT rv.review_id)
+                        ELSE 0
+                    END) * 0.3
                         +
                         (CASE
                             WHEN COUNT(DISTINCT rv.review_id) > 0
