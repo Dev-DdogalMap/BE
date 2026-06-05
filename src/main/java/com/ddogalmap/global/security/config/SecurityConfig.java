@@ -49,15 +49,14 @@ public class SecurityConfig {
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview",
-                                "/api/restaurants/*/reviews"
+                                "/api/restaurants/*/reviews",
+                                "/api/restaurants/*/info",
+                                "/api/restaurants/search",
+                                "/api/food-types"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/restaurants/*/review")
                         .authenticated()
-                                "/api/restaurants/*/info",
-                                "/api/restaurants/search",
-                                "/api/food-types")
-                        .permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )

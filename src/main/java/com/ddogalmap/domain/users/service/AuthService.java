@@ -1,5 +1,7 @@
 package com.ddogalmap.domain.users.service;
 
+import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
+import com.ddogalmap.domain.bookmarks.repository.BookmarkCategoryRepository;
 import com.ddogalmap.domain.users.dto.response.AccessTokenResponse;
 import com.ddogalmap.domain.users.dto.response.LoginTokenResult;
 import com.ddogalmap.domain.users.entity.User;
@@ -42,6 +44,8 @@ public class AuthService {
     @Value("${kakao.client-secret}")
     private String kakaoClientSecret;
 
+    private final BookmarkCategoryRepository bookmarkCategoryRepository;
+
     public String getKakaoLoginUrl() {
         return UriComponentsBuilder
                 .fromUriString(kakaoAuthUri)
@@ -76,9 +80,18 @@ public class AuthService {
                     existingUser.updateKakaoProfile(email, nickname, profileImageUrl);
                     return existingUser;
                 })
-                .orElseGet(() -> userRepository.save(
-                        User.createKakaoUser(kakaoId, email, nickname, profileImageUrl)
-                ));
+                .orElseGet(() -> {
+                    User newUser = User.createKakaoUser(kakaoId, email, nickname, profileImageUrl);
+
+                    User savedUser = userRepository.save(newUser);
+
+                    bookmarkCategoryRepository.save(
+                            BookmarkCategory.createDefault(savedUser)
+                    );
+
+                    return savedUser;
+                });
+
 
         String accessToken = jwtTokenProvider.createAccessToken(
                 user.getUserId(),
