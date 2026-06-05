@@ -179,7 +179,7 @@ public class ChatRoomsService {
         List<MemberInfo> memberInfos = chatRoomMembersRepository.findAllByChatRoom(room);
 
         return new ChatRoomInfoResponse(
-                room.getImageUrl(),
+                imageUtilService.getImageUrl(room.getImageUrl()),
                 room.getRoomName(),
                 room.getParticipantCount(),
                 room.getMaxParticipantCount(),
@@ -194,16 +194,15 @@ public class ChatRoomsService {
     public ChatRoomListResponse getChatRoomList(Pageable pageable) {
         Slice<ChatRoomListThumbnailResponse> chatRoomSlice = chatRoomsRepository.findChatRoomListThumbnail(pageable);
         List<ChatRoomListThumbnailResponse> chatRoomList = chatRoomSlice.stream()
-                .map(chatRoom -> {
-                    System.out.println(imageUtilService.getImageUrl(chatRoom.roomImageUrl()));
-                    return new ChatRoomListThumbnailResponse(
+                .map(chatRoom ->
+                        new ChatRoomListThumbnailResponse(
                         chatRoom.roomId(),
                         imageUtilService.getImageUrl(chatRoom.roomImageUrl()),
                         chatRoom.roomName(),
                         chatRoom.participantCount(),
                         chatRoom.maxParticipantCount(),
                         chatRoom.createdAt(),
-                        chatRoom.latestMessageTime());}).toList();
+                        chatRoom.latestMessageTime())).toList();
         return new ChatRoomListResponse(chatRoomSlice.hasNext(), chatRoomList);
     }
 
