@@ -60,8 +60,8 @@ public class AuthController {
                         loginResult.refreshToken()
                 )
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(isSecureCookie())
+                .sameSite(cookieSameSite())
                 .path("/api/auth/refresh")
                 .maxAge(Duration.ofDays(14))
                 .build();
@@ -104,8 +104,8 @@ public class AuthController {
 
         ResponseCookie deleteCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("None")
+                .secure(isSecureCookie())
+                .sameSite(cookieSameSite())
                 .path("/api/auth/refresh")
                 .maxAge(0)
                 .build();
@@ -123,5 +123,13 @@ public class AuthController {
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private boolean isSecureCookie() {
+        return !frontendUrl.startsWith("http://localhost");
+    }
+
+    private String cookieSameSite() {
+        return isSecureCookie() ? "None" : "Lax";
     }
 }

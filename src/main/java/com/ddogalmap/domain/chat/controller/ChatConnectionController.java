@@ -15,8 +15,9 @@ public class ChatConnectionController {
     public WebSocketConnectionInfoResponse getConnectionInfo() {
         return new WebSocketConnectionInfoResponse(
                 "/ws-chat",
-                "/pub/chats/messages",
+                "/app/direct-chats/{directChatRoomId}/messages",
                 List.of(
+                        "/topic/direct-chats/{directChatRoomId}",
                         "/sub/chats/direct/{directChatRoomId}",
                         "/sub/chats/group/{chatRoomId}"
                 ),
