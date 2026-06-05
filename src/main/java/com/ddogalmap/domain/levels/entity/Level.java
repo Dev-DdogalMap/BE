@@ -1,11 +1,7 @@
-package com.ddogalmap.domain.users.entity;
+package com.ddogalmap.domain.levels.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.ddogalmap.domain.users.BaseEntity;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "levels")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Level {
+public class Level extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
