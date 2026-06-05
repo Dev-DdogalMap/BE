@@ -49,7 +49,6 @@ public class ChatMessageStompController {
                 new ChatMessageSendRequest(
                         ChatRoomType.DIRECT,
                         directChatRoomId,
-                        request.messageType(),
                         request.message()
                 )
         );
@@ -62,7 +61,6 @@ public class ChatMessageStompController {
                 savedMessage.directChatRoomId(),
                 savedMessage.senderId(),
                 savedMessage.senderNickname(),
-                savedMessage.messageType(),
                 savedMessage.status(),
                 savedMessage.message(),
                 savedMessage.createdAt()
@@ -73,7 +71,6 @@ public class ChatMessageStompController {
                 savedMessage.directChatRoomId(),
                 savedMessage.senderId(),
                 savedMessage.senderNickname(),
-                savedMessage.messageType(),
                 savedMessage.status(),
                 savedMessage.message(),
                 savedMessage.createdAt()

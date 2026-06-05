@@ -99,7 +99,6 @@ public class DirectChatRoomController {
                 new ChatMessageSendRequest(
                         ChatRoomType.DIRECT,
                         directChatRoomId,
-                        request.messageType(),
                         request.message()
                 )
         );
