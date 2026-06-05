@@ -55,9 +55,10 @@ public class RestaurantController {
 
 	@Operation(summary = "음식점 정보 조회 API", description = "음식점의 위치 및 매장 정보를 조회합니다.")
 	@GetMapping("/{restaurantId}/info")
-	public ResponseEntity<RestaurantInfoResponse> getRestaurantInfo(@PathVariable Long restaurantId) {
-		return ResponseEntity.ok(restaurantService.getRestaurantInfo(restaurantId));
+	public ResponseEntity<RestaurantInfoResponse> getRestaurantInfo(
+			@PathVariable Long restaurantId,
+			@RequestParam(required = false) Double lat,
+			@RequestParam(required = false) Double lng) {
+		return ResponseEntity.ok(restaurantService.getRestaurantInfo(restaurantId, lat, lng));
 	}
-
-
 }

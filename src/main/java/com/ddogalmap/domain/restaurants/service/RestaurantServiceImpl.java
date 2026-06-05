@@ -6,6 +6,7 @@ import com.ddogalmap.domain.restaurants.dto.response.RestaurantInfoResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantMapResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
+import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
+    private final ReviewRepository reviewRepository;
 
     /**
      * 현재 지도 화면 영역 내 식당 목록을 조회한다.
@@ -63,28 +65,49 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantPreviewProjection projection =
                 restaurantRepository.findRestaurantPreview(restaurantId, lat, lng)
                         .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
+        RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
-        // TODO: 리뷰 및 맛집 지수 추가시 수정
         RestaurantPreviewResponse response =
-                RestaurantPreviewResponse.from(projection, null, List.of(), null);
+                RestaurantPreviewResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
 
         log.info("[RestaurantService] 식당 미리보기 조회 완료 - restaurantId: {}, reviewCount: {}", response.restaurantId(), response.reviewCount());
 
-		return response;
+        return response;
 	}
 
-	@Override
-	public RestaurantInfoResponse getRestaurantInfo(Long restaurantId) {
+    @Override
+    public RestaurantInfoResponse getRestaurantInfo(Long restaurantId, Double lat, Double lng) {
 
-		log.info("[RestaurantService] 식당 정보 조회 요청 - restaurantId: {}", restaurantId);
+        log.info("[RestaurantService] 식당 정보 조회 요청 - restaurantId: {}", restaurantId);
 
-		RestaurantInfoProjection projection = restaurantRepository.findRestaurantInfo(restaurantId)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
+        RestaurantInfoProjection projection = restaurantRepository.findRestaurantInfo(restaurantId, lat, lng)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
 
-		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection);
+        RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
-		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
+        RestaurantInfoResponse response = RestaurantInfoResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
 
-		return response;
-	}
+        log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
+
+        return response;
+    }
+
+    private RestaurantExtraInfo getRestaurantExtraInfo(Long restaurantId) {
+        String imageUrl = reviewRepository.findRepresentativeImageUrl(restaurantId)
+                .orElse(null);
+
+        List<String> topTags = reviewRepository.findTop3TagsByRestaurantId(restaurantId);
+
+        // TODO: 맛집 지수 계산 구현
+        Double foodScore = null;
+
+        return new RestaurantExtraInfo(imageUrl, topTags, foodScore);
+    }
+
+    private record RestaurantExtraInfo(
+            String imageUrl,
+            List<String> topTags,
+            Double foodScore
+    ) {
+    }
 }
