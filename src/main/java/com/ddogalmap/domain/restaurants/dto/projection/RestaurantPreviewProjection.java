@@ -8,4 +8,5 @@ public interface RestaurantPreviewProjection {
     Integer getDistance();
     Double getAverageScore();
     Long getReviewCount();
+    Double getFoodScore();               // 전체 맛집지수 (0~100, 소수 첫째자리)
 }
