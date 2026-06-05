@@ -34,6 +34,9 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String region;
 
+    private LocalDateTime regionVerifiedAt;
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
@@ -55,5 +58,10 @@ public class User extends BaseEntity {
         this.email = email;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
+        this.regionVerifiedAt = LocalDateTime.now();
     }
 }

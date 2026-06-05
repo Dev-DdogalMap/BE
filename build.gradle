@@ -58,6 +58,9 @@ dependencies {
 
     // Prometheus
     implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    implementation 'org.hibernate.orm:hibernate-spatial'
+    implementation 'org.locationtech.jts:jts-core'
 }
 
 tasks.named('test') {
