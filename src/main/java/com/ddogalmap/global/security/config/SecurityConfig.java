@@ -50,7 +50,8 @@ public class SecurityConfig {
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview",
                                 "/api/restaurants/*/reviews",
-                                "/api/regions/tree"
+                                "/api/regions/tree",
+                                "/api/taste-experts"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/restaurants/*/review")
