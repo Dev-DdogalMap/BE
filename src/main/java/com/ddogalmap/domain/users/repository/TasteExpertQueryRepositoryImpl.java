@@ -40,7 +40,7 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
                 left join %1$s.reviews r on r.user_id = u.user_id
                 left join %1$s.restaurants rt on rt.restaurant_id = r.restaurant_id
                 left join %1$s.food_types ft on ft.food_type_id = rt.food_type_id
-                left join %1$s.visit_verification vv on vv.user_id = u.user_id
+                left join %1$s.visit_verifications vv on vv.user_id = u.user_id
                 where (cast(:keyword as text) is null or u.nickname ilike cast(:keyword as text))
                     and (cast(:region as text) is null or u.region = cast(:region as text))
                     and (cast(:minLevel as integer) is null or l.level >= cast(:minLevel as integer))
