@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
@@ -46,25 +48,26 @@ public class ChatRoomsService {
      */
     @Transactional
     public CreateChatRoomResponse createChatRoom(Long ownerId, CreateChatRoomRequest request) {
-
         FoodType foodType = foodTypeRepository.findById(request.foodTypeId()).orElseThrow(() -> new IllegalArgumentException("음식 카테고리가 존재하지 않습니다."));
 
         //그룹 채팅방 생성
         ChatRooms room = chatRoomsRepository.save(ChatRooms.builder()
-                        .roomName(request.roomName())
-                        .foodType(foodType)
-                        .region(request.region())
-                        .participantCount(1)
-                        .maxParticipantCount(request.maxParticipantCount())
-                        .build());
+                .roomName(request.roomName())
+                .foodType(foodType)
+                .region(request.region())
+                .participantCount(1)
+                .maxParticipantCount(request.maxParticipantCount())
+                .imageUrl(request.imageKey())
+                .build());
 
         //멤버 추가
         User user = userRepository.findById(ownerId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
         chatRoomMembersRepository.save(ChatRoomMembers.builder()
-                        .chatRoom(room)
-                        .role(ChatRoomMemberRole.OWNER)
-                        .user(user)
-                        .build());
+                .chatRoom(room)
+                .role(ChatRoomMemberRole.OWNER)
+                .user(user)
+                .build());
+
         return new CreateChatRoomResponse(room.getId());
     }
 
