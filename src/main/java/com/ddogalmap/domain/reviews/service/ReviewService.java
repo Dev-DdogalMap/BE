@@ -1,5 +1,7 @@
 package com.ddogalmap.domain.reviews.service;
 
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.reviews.dto.request.ReviewRequest;
 import com.ddogalmap.domain.reviews.dto.response.ReviewResponse;
 import com.ddogalmap.domain.reviews.entity.Review;
@@ -8,6 +10,7 @@ import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final FileService fileService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public Long createReview(Long restaurantId, Long userId, ReviewRequest request, List<MultipartFile> images) {
@@ -40,8 +44,10 @@ public class ReviewService {
             request.tags().forEach(review::addTag);
         }
 
+        boolean hasImage = images != null && !images.isEmpty();
+
         // 이미지 저장
-        if (images != null && !images.isEmpty()) {
+        if (hasImage) {
             for (MultipartFile image : images) {
                 // 💡 storeFilename에 전체 S3 URL 주소가 담겨옵니다.
                 String storeFilename = fileService.saveFile(image);
@@ -56,7 +62,16 @@ public class ReviewService {
             }
         }
 
-        return reviewRepository.save(review).getReviewId();
+        Review savedReview = reviewRepository.save(review);
+
+        // 경험치 이벤트 발행
+        ActivityType activityType = hasImage
+                ? ActivityType.REVIEW_PHOTO
+                : ActivityType.REVIEW_WRITE;
+
+        eventPublisher.publishEvent(new LevelExpEvent(userId, activityType, savedReview.getReviewId()));
+
+        return savedReview.getReviewId();
     }
 
     @Transactional(readOnly = true)
