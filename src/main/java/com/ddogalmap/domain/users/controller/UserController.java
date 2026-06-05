@@ -21,7 +21,6 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-@SecurityRequirement(name = "BearerAuth")
 @Slf4j
 public class UserController {
 
@@ -47,7 +46,11 @@ public class UserController {
 		);
 	}
 
-
+	@Operation(
+			summary = "내 장소 인증",
+			description = "사용자의 경도 위도 값을 확인하여 내 장소를 인증합니다.",
+			security = @SecurityRequirement(name = "bearerAuth")
+	)
 	@PostMapping("/me/region-verification")
 	public ResponseEntity<RegionVerificationResponse> verifyRegion(@AuthenticationPrincipal UserPrincipal user,
 																   @RequestBody RegionVerificationRequest request) {
