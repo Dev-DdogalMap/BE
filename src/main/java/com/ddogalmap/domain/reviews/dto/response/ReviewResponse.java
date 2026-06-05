@@ -5,6 +5,7 @@ import java.util.List;
 
 public record ReviewResponse(
     Long reviewId,
+    String nickname,
     Integer score,
     String content,
     boolean isRevisit,

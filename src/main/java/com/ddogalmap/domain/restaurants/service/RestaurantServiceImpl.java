@@ -65,7 +65,6 @@ public class RestaurantServiceImpl implements RestaurantService {
         RestaurantPreviewProjection projection =
                 restaurantRepository.findRestaurantPreview(restaurantId, lat, lng)
                         .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
-
         RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
         RestaurantPreviewResponse response =
@@ -73,25 +72,25 @@ public class RestaurantServiceImpl implements RestaurantService {
 
         log.info("[RestaurantService] 식당 미리보기 조회 완료 - restaurantId: {}, reviewCount: {}", response.restaurantId(), response.reviewCount());
 
-		return response;
+        return response;
 	}
 
-	@Override
-	public RestaurantInfoResponse getRestaurantInfo(Long restaurantId, Double lat, Double lng) {
+    @Override
+    public RestaurantInfoResponse getRestaurantInfo(Long restaurantId, Double lat, Double lng) {
 
-		log.info("[RestaurantService] 식당 정보 조회 요청 - restaurantId: {}", restaurantId);
+        log.info("[RestaurantService] 식당 정보 조회 요청 - restaurantId: {}", restaurantId);
 
-		RestaurantInfoProjection projection = restaurantRepository.findRestaurantInfo(restaurantId, lat, lng)
-				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
+        RestaurantInfoProjection projection = restaurantRepository.findRestaurantInfo(restaurantId, lat, lng)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 식당입니다."));
 
         RestaurantExtraInfo extraInfo = getRestaurantExtraInfo(restaurantId);
 
-		RestaurantInfoResponse response = RestaurantInfoResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
+        RestaurantInfoResponse response = RestaurantInfoResponse.from(projection, extraInfo.imageUrl, extraInfo.topTags, extraInfo.foodScore);
 
-		log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
+        log.info("[RestaurantService] 식당 정보 조회 완료 - restaurantId: {}, placeName: {}", response.restaurantId(), response.placeName());
 
-		return response;
-	}
+        return response;
+    }
 
     private RestaurantExtraInfo getRestaurantExtraInfo(Long restaurantId) {
         String imageUrl = reviewRepository.findRepresentativeImageUrl(restaurantId)

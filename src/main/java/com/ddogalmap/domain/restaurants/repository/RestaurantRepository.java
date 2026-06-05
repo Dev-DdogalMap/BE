@@ -76,6 +76,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             @Param("lng") Double lng
     );
 
+
+
     @Query(value = """
         SELECT
             r.restaurant_id AS restaurantId,
@@ -112,11 +114,11 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             r.place_url,
             r.location
     """, nativeQuery = true)
-        Optional<RestaurantInfoProjection> findRestaurantInfo(
-                @Param("restaurantId") Long restaurantId,
-                @Param("lat") Double lat,
-                @Param("lng") Double lng
-        );
+    Optional<RestaurantInfoProjection> findRestaurantInfo(
+            @Param("restaurantId") Long restaurantId,
+            @Param("lat") Double lat,
+            @Param("lng") Double lng
+    );
 
     @Query(value = """
         SELECT
