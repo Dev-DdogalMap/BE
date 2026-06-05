@@ -78,7 +78,7 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
             return authHeader.substring(BEARER_PREFIX.length());
         }
 
-        // 헤더 없으면 쿠키에서 읽기 -> 못 읽을 수도 있음 그러면 지우기
+        // STOMP Authorization 헤더가 없으면 쿠키에서 토큰을 조회한다.
         List<String> cookies = accessor.getNativeHeader("cookie");
         if (cookies != null) {
             for (String cookie : cookies) {
@@ -91,6 +91,6 @@ public class StompJwtChannelInterceptor implements ChannelInterceptor {
             }
         }
 
-		return authHeader.substring(BEARER_PREFIX.length());
+		return null;
 	}
 }

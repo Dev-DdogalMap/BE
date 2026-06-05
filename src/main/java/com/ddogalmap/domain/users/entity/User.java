@@ -31,25 +31,37 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String profileImageUrl;
 
+    @Column(length = 100)
+    private String region;
+
+    private LocalDateTime regionVerifiedAt;
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
 
-    protected User(Long kakaoId, String email, String nickname, String profileImageUrl, UserRole role) {
+    protected User(Long kakaoId, String email, String nickname, String profileImageUrl, String region, UserRole role) {
         this.kakaoId = kakaoId;
         this.email = email;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+        this.region = region;
         this.role = role;
     }
 
     public static User createKakaoUser(Long kakaoId, String email, String nickname, String profileImageUrl) {
-        return new User(kakaoId, email, nickname, profileImageUrl, UserRole.USER);
+        return new User(kakaoId, email, nickname, profileImageUrl, null, UserRole.USER);
     }
 
     public void updateKakaoProfile(String email, String nickname, String profileImageUrl) {
         this.email = email;
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
+        this.regionVerifiedAt = LocalDateTime.now();
     }
 }

@@ -30,8 +30,8 @@ ENV LOG_PATH=/app/logs
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone \
-    && addgroup --system spring \
-    && adduser --system --ingroup spring spring \
+    && addgroup --system --gid 1000 spring \
+    && adduser --system --uid 1000 --ingroup spring spring \
     && mkdir -p /app/logs
 
 COPY --from=builder /app/build/libs/*.jar app.jar

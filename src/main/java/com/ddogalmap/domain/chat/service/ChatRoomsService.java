@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
@@ -25,9 +26,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 
 @Service
@@ -40,31 +44,33 @@ public class ChatRoomsService {
     private final UserRepository userRepository;
     private final FoodTypeRepository foodTypeRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final ImageUtilService imageUtilService;
 
     /**
      * 그룹 채팅방 생성
      */
     @Transactional
     public CreateChatRoomResponse createChatRoom(Long ownerId, CreateChatRoomRequest request) {
-
         FoodType foodType = foodTypeRepository.findById(request.foodTypeId()).orElseThrow(() -> new IllegalArgumentException("음식 카테고리가 존재하지 않습니다."));
 
         //그룹 채팅방 생성
         ChatRooms room = chatRoomsRepository.save(ChatRooms.builder()
-                        .roomName(request.roomName())
-                        .foodType(foodType)
-                        .region(request.region())
-                        .participantCount(1)
-                        .maxParticipantCount(request.maxParticipantCount())
-                        .build());
+                .roomName(request.roomName())
+                .foodType(foodType)
+                .region(request.region())
+                .participantCount(1)
+                .maxParticipantCount(request.maxParticipantCount())
+                .imageUrl(request.imageKey())
+                .build());
 
         //멤버 추가
         User user = userRepository.findById(ownerId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
         chatRoomMembersRepository.save(ChatRoomMembers.builder()
-                        .chatRoom(room)
-                        .role(ChatRoomMemberRole.OWNER)
-                        .user(user)
-                        .build());
+                .chatRoom(room)
+                .role(ChatRoomMemberRole.OWNER)
+                .user(user)
+                .build());
+
         return new CreateChatRoomResponse(room.getId());
     }
 
@@ -109,7 +115,7 @@ public class ChatRoomsService {
 
         //중복 참여 검증
         if (chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
-            throw new IllegalArgumentException("이미 해당 그룹 채팅방에 참여 중입니다.");
+            return new JoinChatRoomResponse(chatRoom.getId(), true);
         }
 
         //채팅방 full 검증
@@ -126,7 +132,7 @@ public class ChatRoomsService {
 
         //그룹 채팅 참여인원 수정 - 동시성 문제를 막기 위해 원자적 update
         chatRoomsRepository.increaseParticipantCount(chatRoom.getId());
-        return new JoinChatRoomResponse(chatRoom.getId());
+        return new JoinChatRoomResponse(chatRoom.getId(), false);
     }
 
     /**
@@ -173,7 +179,7 @@ public class ChatRoomsService {
         List<MemberInfo> memberInfos = chatRoomMembersRepository.findAllByChatRoom(room);
 
         return new ChatRoomInfoResponse(
-                room.getImageUrl(),
+                imageUtilService.getImageUrl(room.getImageUrl()),
                 room.getRoomName(),
                 room.getParticipantCount(),
                 room.getMaxParticipantCount(),
@@ -187,8 +193,16 @@ public class ChatRoomsService {
      */
     public ChatRoomListResponse getChatRoomList(Pageable pageable) {
         Slice<ChatRoomListThumbnailResponse> chatRoomSlice = chatRoomsRepository.findChatRoomListThumbnail(pageable);
-        List<ChatRoomListThumbnailResponse> chatRoomList = chatRoomSlice.stream().toList();
-
+        List<ChatRoomListThumbnailResponse> chatRoomList = chatRoomSlice.stream()
+                .map(chatRoom ->
+                        new ChatRoomListThumbnailResponse(
+                        chatRoom.roomId(),
+                        imageUtilService.getImageUrl(chatRoom.roomImageUrl()),
+                        chatRoom.roomName(),
+                        chatRoom.participantCount(),
+                        chatRoom.maxParticipantCount(),
+                        chatRoom.createdAt(),
+                        chatRoom.latestMessageTime())).toList();
         return new ChatRoomListResponse(chatRoomSlice.hasNext(), chatRoomList);
     }
 
