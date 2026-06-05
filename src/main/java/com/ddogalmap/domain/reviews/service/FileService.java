@@ -20,8 +20,10 @@ public class FileService {
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
-    @Value("${spring.cloud.aws.region.static}")
-    private String region;
+//    @Value("${spring.cloud.aws.region.static}")
+//    private String region;
+    @Value("${spring.cloud.aws.s3.cloudfront-url}")
+    private String cloudFrontUrl;
 
     public String saveFile(MultipartFile file) {
         if (file == null || file.isEmpty()) return null;
@@ -53,6 +55,6 @@ public class FileService {
         }
 
         // 업로드된 S3 객체의 전체 URL 반환
-        return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+        return String.format("%s/%s", cloudFrontUrl, key);
     }
 }

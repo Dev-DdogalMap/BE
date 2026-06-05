@@ -4,6 +4,7 @@ public record CreateChatRoomRequest(
         String roomName,
         String region,
         Long foodTypeId,
-        Integer maxParticipantCount
+        Integer maxParticipantCount,
+        String imageKey
 ) {
 }

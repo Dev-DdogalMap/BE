@@ -1,8 +1,12 @@
 package com.ddogalmap.domain.chat.controller;
 
+import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
+import com.ddogalmap.domain.chat.service.ImageUtilService;
+import com.ddogalmap.domain.users.enumtype.UserRole;
+import com.ddogalmap.global.security.jwt.JwtTokenProvider;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -11,7 +15,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,7 +31,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatRoomsController {
 
+    private static final String S3_FOLDER = "chat";
+
     private final ChatRoomsService chatRoomsService;
+    private final ImageUtilService imageUtilService;
 
     @Operation(
             summary = "그룹 채팅방 생성",
@@ -38,9 +44,19 @@ public class ChatRoomsController {
     @PostMapping
     public CreateChatRoomResponse createChatRoom(
             @AuthenticationPrincipal UserPrincipal principal,
-            @RequestBody CreateChatRoomRequest request  //사진 추가해야함
+            @RequestBody CreateChatRoomRequest request
     ) {
         return chatRoomsService.createChatRoom(principal.userId(), request);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 이미지 업로드용 presigned url 발급",
+            description = "그룹 채팅방 이미지 업로드용 presigned url 발급합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/presigned-url")
+    public UrlDto getPresignedUrl(@RequestParam("imageFileName") String imageFileName) {
+        return imageUtilService.generatePresignedUrl(S3_FOLDER, imageFileName);
     }
 
     @Operation(

@@ -109,6 +109,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             @Param("lng") Double lng
     );
 
+
+
     @Query(value = """
         SELECT
             r.restaurant_id AS restaurantId,

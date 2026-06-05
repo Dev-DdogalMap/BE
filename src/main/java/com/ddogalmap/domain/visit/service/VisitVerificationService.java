@@ -1,5 +1,7 @@
 package com.ddogalmap.domain.visit.service;
 
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
 import com.ddogalmap.domain.users.entity.User;
@@ -9,6 +11,7 @@ import com.ddogalmap.domain.visit.dto.response.VisitVerificationResponse;
 import com.ddogalmap.domain.visit.entity.VisitVerification;
 import com.ddogalmap.domain.visit.repository.VisitVerificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class VisitVerificationService {
     private final VisitVerificationRepository visitVerificationRepository;
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public VisitVerificationResponse verifyVisit(
@@ -66,6 +70,9 @@ public class VisitVerificationService {
         );
 
         VisitVerification saved = visitVerificationRepository.save(visitVerification);
+
+        // 경험치 이벤트 발행
+        eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.VISIT_VERIFY, saved.getId()));
 
         return new VisitVerificationResponse(
                 saved.getId(),
