@@ -41,13 +41,17 @@ public class RestaurantSearchService {
             String keyword,
             String region,
             Long foodTypeId,
-            double lat,
-            double lng,
+            Double lat,
+            Double lng,
             String sort,
             int page,
             int size
     ) {
         String normalizedSort = normalizeSort(sort);
+        // lat/lng 없으면 distance 정렬 불가 → jjinScore 로 자동 폴백
+        if ("distance".equals(normalizedSort) && (lat == null || lng == null)) {
+            normalizedSort = "jjinScore";
+        }
         int normalizedPage = page < 1 ? 1 : page;
         int normalizedSize = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
         int offset = (normalizedPage - 1) * normalizedSize;
