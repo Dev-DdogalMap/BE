@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.MultiPolygon;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
+@EnableJpaAuditing
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class Region {
@@ -41,6 +44,9 @@ public class Region {
 
     @Column(name = "eupmyeondong_name", nullable = false, length = 50)
     private String eupmyeondongName;
+
+    @Column(columnDefinition = "geometry(MultiPolygon,4326)")
+    private MultiPolygon geom;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
