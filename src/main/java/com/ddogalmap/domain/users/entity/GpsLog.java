@@ -21,8 +21,7 @@ public class GpsLog {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "gps_log_id")
-    private Long id;
+	private Long gpsLogId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")

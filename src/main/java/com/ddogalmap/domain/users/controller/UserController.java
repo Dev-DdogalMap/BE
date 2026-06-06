@@ -2,6 +2,7 @@ package com.ddogalmap.domain.users.controller;
 
 import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
+import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
 import com.ddogalmap.domain.users.service.RegionVerificationService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,15 +48,32 @@ public class UserController {
 	}
 
 	@Operation(
-			summary = "내 장소 인증",
-			description = "사용자의 경도 위도 값을 확인하여 내 장소를 인증합니다.",
+			summary = "내 동네 인증",
+			description = "사용자의 경도 위도 값을 확인하여 내 동네를 인증합니다.",
 			security = @SecurityRequirement(name = "bearerAuth")
 	)
-	@PostMapping("/me/region-verification")
+	@PostMapping("/me/region-verification") //api/users/me/region-verification
 	public ResponseEntity<RegionVerificationResponse> verifyRegion(@AuthenticationPrincipal UserPrincipal user,
 																   @RequestBody RegionVerificationRequest request) {
 
 		return ResponseEntity.ok(regionVerificationService.verifyRegion(user.userId(), request));
 	}
 
+	//get
+	@Operation(
+			summary = "내 동네 인증 정보 조회",
+			description = "현재 로그인한 사용자의 동네 인증 정보를 조회합니다.",
+			security = @SecurityRequirement(name = "bearerAuth")
+	)
+	@GetMapping("/me/region-verification")
+	public ResponseEntity<RegionVerificationStatusResponse> getRegionVerification(
+			@AuthenticationPrincipal UserPrincipal user
+	) {
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+		}
+		return ResponseEntity.ok(
+				regionVerificationService.getRegionVerification(user.userId())
+		);
+	}
 }
