@@ -5,6 +5,7 @@ import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.request.DirectChatMessageRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.service.DirectChatRoomService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
@@ -45,15 +46,15 @@ public class DirectChatRoomController {
     }
 
     @Operation(
-            summary = "내 개인 채팅방 목록 조회",
-            description = "현재 로그인한 사용자가 참여 중인 1:1 채팅방 목록을 조회합니다.",
+            summary = "내 대화 목록 조회",
+            description = "현재 로그인한 사용자가 참여 중인 1:1 채팅방 목록과 그룹 채팅 목록을 조회합니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping
-    public List<DirectChatRoomResponse> getMyDirectChatRooms(
+    public List<MyChatRoomResponse> getMyChatRooms(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return directChatRoomService.getMyDirectChatRooms(principal.userId());
+        return directChatRoomService.getMyChatRooms(principal.userId());
     }
 
     @Operation(
