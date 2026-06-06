@@ -75,7 +75,7 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 		Region region = regionRepository.findRegionByPoint(request.latitude(), request.longitude())
 				.orElseThrow(() -> new IllegalArgumentException("인증 가능한 지역이 아닙니다."));
 
-		LocalDateTime verifiedAt = LocalDateTime.now();
+		LocalDateTime verifiedAt = null;
 
 		// GPS 로그 저장
 		saveGpsLog(user, request.latitude(), request.longitude(), request.accuracy());
@@ -91,13 +91,14 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 
 		// 3회 연속 동일 지역인 경우에만 사용자 지역 정보 갱신
 		if (stable) {
+			verifiedAt = LocalDateTime.now();
 			user.updateRegion(region.getEupmyeondongName(), verifiedAt);
 			log.debug("[Region Verify] 사용자 지역 갱신 완료 - userId={}, region={}",
 					userId, region.getEupmyeondongName());
 		}
 
 		return new RegionVerificationResponse(
-				region.getEupmyeondongName(), true, verifiedAt);
+				region.getEupmyeondongName(), stable, verifiedAt);
 	}
 
 	private void validateAccuracy(Double accuracy) {

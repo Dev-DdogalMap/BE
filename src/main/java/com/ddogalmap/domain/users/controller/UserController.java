@@ -69,6 +69,9 @@ public class UserController {
 	public ResponseEntity<RegionVerificationStatusResponse> getRegionVerification(
 			@AuthenticationPrincipal UserPrincipal user
 	) {
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+		}
 		return ResponseEntity.ok(
 				regionVerificationService.getRegionVerification(user.userId())
 		);
