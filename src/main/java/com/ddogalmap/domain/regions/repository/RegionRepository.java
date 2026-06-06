@@ -10,9 +10,25 @@ import java.util.Optional;
 
 public interface RegionRepository extends JpaRepository<Region, Long> {
 
-    List<Region> findAllByOrderBySidoNameAscSigunguNameAscEupmyeondongNameAsc();
+	List<Region> findAllByOrderBySidoNameAscSigunguNameAscEupmyeondongNameAsc();
 
-    @Query(value = """
+
+	@Query(value = """
+			    SELECT *
+			    FROM regions r
+			    WHERE ST_Covers(
+			        r.geom,
+			        ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)
+			    )
+			    LIMIT 1
+			""", nativeQuery = true)
+	Optional<Region> findRegionByPoint(@Param("lat") double lat, @Param("lng") double lng);
+}
+
+
+/*
+  //v1
+  @Query(value = """
         SELECT r.*
         FROM regions r
         WHERE ST_Contains(
@@ -21,5 +37,4 @@ public interface RegionRepository extends JpaRepository<Region, Long> {
         )
         LIMIT 1
     """, nativeQuery = true)
-    Optional<com.ddogalmap.domain.regions.entity.Region> findRegionByPoint(@Param("lat") double lat, @Param("lng") double lng);
-}
+    Optional<com.ddogalmap.domain.regions.entity.Region> findRegionByPoint(@Param("lat") double lat, @Param("lng") double lng);*/

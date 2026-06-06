@@ -60,8 +60,8 @@ public class User extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
-    public void updateRegion(String region) {
+    public void updateRegion(String region, LocalDateTime regionVerifiedAt) {
         this.region = region;
-        this.regionVerifiedAt = LocalDateTime.now();
+        this.regionVerifiedAt = regionVerifiedAt;
     }
 }
