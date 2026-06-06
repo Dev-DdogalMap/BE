@@ -14,6 +14,7 @@ import com.ddogalmap.domain.chat.exception.MessageBlankException;
 import com.ddogalmap.domain.chat.exception.NotChatRoomMemberException;
 import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
+import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +37,8 @@ public class DirectChatRoomService {
     private final DirectChatRoomRepository directChatRoomRepository;
     private final ChatMessageRepository directChatMessageRepository;
     private final UserRepository userRepository;
+    private final ChatRoomsRepository chatRoomsRepository;
+    private final ImageUtilService imageUtilService;
 
     @Transactional
     public DirectChatRoomResponse createOrGetDirectChatRoom(Long requesterId, CreateDirectChatRoomRequest request) {
@@ -62,24 +66,32 @@ public class DirectChatRoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<DirectChatRoomResponse> getMyDirectChatRooms(Long currentUserId) {
-        return directChatRoomRepository.findAllByParticipant(currentUserId).stream()
-                .map(room -> {
-                    ChatMessages latestMessage = directChatMessageRepository
-                            .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
-                            .orElse(null);
+    public List<DirectChatRoomResponse> getMyChatRooms(Long currentUserId) {
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
 
-                    return DirectChatMapper.toRoomResponse(
-                            room,
-                            currentUserId,
-                            latestMessage == null ? null : latestMessage.getMessage(),
-                            latestMessage == null ? null : latestMessage.getCreatedAt()
-                    );
-                })
-                .sorted(Comparator.comparing(
-                        DirectChatRoomResponse::lastMessageAt,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                ).thenComparing(DirectChatRoomResponse::directChatRoomId, Comparator.reverseOrder()))
+        // 1:1 채팅 목록 조회
+        List<DirectChatRoomResponse> chatList = directChatRoomRepository.findAllByParticipantWithLatestMessage(currentUserId);
+
+        // 그룹 채팅 목록 조회
+        List<DirectChatRoomResponse> groupChatList = chatRoomsRepository.findMyChatRooms(user).stream()
+                .map(chatRoom -> new DirectChatRoomResponse(
+                        chatRoom.directChatRoomId(),
+                        chatRoom.targetUserId(),
+                        chatRoom.targetNickname(),
+                        imageUtilService.getImageUrl(chatRoom.targetProfileImageUrl()),  //cdn url 적용
+                        chatRoom.lastMessage(),
+                        chatRoom.lastMessageAt(),
+                        chatRoom.unreadCount(),
+                        chatRoom.createdAt()
+                ))
+                .toList();
+        chatList.addAll(groupChatList);
+
+        // 메시지 생성시간 순으로 정렬해서 리턴
+        return chatList.stream().sorted(Comparator.comparing(
+                DirectChatRoomResponse::lastMessageAt,
+                Comparator.nullsLast(Comparator.reverseOrder())
+        ).thenComparing(DirectChatRoomResponse::directChatRoomId, Comparator.reverseOrder()))
                 .toList();
     }
 

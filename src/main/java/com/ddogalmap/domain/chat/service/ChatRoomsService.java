@@ -38,6 +38,7 @@ import static java.util.stream.Collectors.toList;
 @RequiredArgsConstructor
 public class ChatRoomsService {
     private static final int DEFAULT_MESSAGE_PAGE_SIZE = 50;
+    private static final String DEFAULT_IMAGE = "chat/default_image.png";
 
     private final ChatRoomsRepository chatRoomsRepository;
     private final ChatRoomMembersRepository chatRoomMembersRepository;
@@ -60,7 +61,7 @@ public class ChatRoomsService {
                 .region(request.region())
                 .participantCount(1)
                 .maxParticipantCount(request.maxParticipantCount())
-                .imageUrl(request.imageKey())
+                .imageUrl(request.imageKey() == null? DEFAULT_IMAGE : request.imageKey())
                 .build());
 
         //멤버 추가

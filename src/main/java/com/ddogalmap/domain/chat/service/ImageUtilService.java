@@ -4,7 +4,6 @@ import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -17,6 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ImageUtilService {
 
+    private static final String DEFAULT_IMAGE = "chat/default_image.png";
     private final S3Presigner s3Presigner;
 
     @Value("${spring.cloud.aws.s3.bucket}")
@@ -49,7 +49,7 @@ public class ImageUtilService {
 
     public String getImageUrl(String key) {
         if (key == null || key.isEmpty()) {
-            return null;
+            key = DEFAULT_IMAGE;
         }
         // domain 끝 슬래시 제거
         String normalizedDomain = domain.endsWith("/") ? domain.substring(0, domain.length() - 1) : domain;
