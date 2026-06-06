@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.chat.repository;
 
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,7 +34,7 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
 
     //내 대화 목록 조회
     @Query("""
-    SELECT new com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse(
+    SELECT new com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse(
         dcr.directChatRoomId,
         CASE WHEN dcr.requester.userId = :currentUserId 
              THEN dcr.receiver.userId 
@@ -50,13 +51,14 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
         (SELECT MAX(dm.createdAt) FROM ChatMessages dm 
              WHERE dm.directChatRoom = dcr),
         0,
-        dcr.createdAt
+        dcr.createdAt,
+        "DIRECT"
     )
     FROM DirectChatRoom dcr
     WHERE dcr.requester.userId = :currentUserId 
        OR dcr.receiver.userId = :currentUserId
 """)
-    List<DirectChatRoomResponse> findAllByParticipantWithLatestMessage(
+    List<MyChatRoomResponse> findAllByParticipantWithLatestMessage(
             @Param("currentUserId") Long currentUserId
     );
 }

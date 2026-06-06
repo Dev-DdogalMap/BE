@@ -4,6 +4,7 @@ import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
@@ -66,15 +67,15 @@ public class DirectChatRoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<DirectChatRoomResponse> getMyChatRooms(Long currentUserId) {
+    public List<MyChatRoomResponse> getMyChatRooms(Long currentUserId) {
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
 
         // 1:1 채팅 목록 조회
-        List<DirectChatRoomResponse> chatList = directChatRoomRepository.findAllByParticipantWithLatestMessage(currentUserId);
+        List<MyChatRoomResponse> chatList = directChatRoomRepository.findAllByParticipantWithLatestMessage(currentUserId);
 
         // 그룹 채팅 목록 조회
-        List<DirectChatRoomResponse> groupChatList = chatRoomsRepository.findMyChatRooms(user).stream()
-                .map(chatRoom -> new DirectChatRoomResponse(
+        List<MyChatRoomResponse> groupChatList = chatRoomsRepository.findMyChatRooms(user).stream()
+                .map(chatRoom -> new MyChatRoomResponse(
                         chatRoom.directChatRoomId(),
                         chatRoom.targetUserId(),
                         chatRoom.targetNickname(),
@@ -82,17 +83,12 @@ public class DirectChatRoomService {
                         chatRoom.lastMessage(),
                         chatRoom.lastMessageAt(),
                         chatRoom.unreadCount(),
-                        chatRoom.createdAt()
+                        chatRoom.createdAt(),
+                        "GROUP"
                 ))
                 .toList();
         chatList.addAll(groupChatList);
-
-        // 메시지 생성시간 순으로 정렬해서 리턴
-        return chatList.stream().sorted(Comparator.comparing(
-                DirectChatRoomResponse::lastMessageAt,
-                Comparator.nullsLast(Comparator.reverseOrder())
-        ).thenComparing(DirectChatRoomResponse::directChatRoomId, Comparator.reverseOrder()))
-                .toList();
+        return chatList;
     }
 
     @Transactional(readOnly = true)

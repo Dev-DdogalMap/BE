@@ -5,6 +5,7 @@ import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.request.DirectChatMessageRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.service.DirectChatRoomService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
@@ -50,7 +51,7 @@ public class DirectChatRoomController {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @GetMapping
-    public List<DirectChatRoomResponse> getMyChatRooms(
+    public List<MyChatRoomResponse> getMyChatRooms(
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         return directChatRoomService.getMyChatRooms(principal.userId());

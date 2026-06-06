@@ -2,6 +2,7 @@ package com.ddogalmap.domain.chat.repository;
 
 import com.ddogalmap.domain.chat.dto.groupChat.response.ChatRoomListThumbnailResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
+import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
 import com.ddogalmap.domain.users.entity.User;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +42,7 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
     Slice<ChatRoomListThumbnailResponse> findChatRoomListThumbnail(Pageable pageable);
 
     @Query("""
-                    SELECT new com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse(
+                    SELECT new com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse(
                         cr.id,
                         null,
                         cr.roomName,
@@ -49,12 +50,13 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
                         (SELECT cm.message FROM ChatMessages cm WHERE cm.chatRoom = cr ORDER BY cm.createdAt DESC LIMIT 1),
                         (SELECT MAX(cm.createdAt) FROM ChatMessages cm WHERE cm.chatRoom = cr),
                         0,
-                        cr.createdAt
+                        cr.createdAt,
+                        "GROUP"
                     )
                     FROM ChatRooms cr
                     JOIN ChatRoomMembers crm on crm.chatRoom = cr
                     WHERE crm.user = :user
                     ORDER BY cr.createdAt DESC
             """)
-    List<DirectChatRoomResponse> findMyChatRooms(User user);
+    List<MyChatRoomResponse> findMyChatRooms(User user);
 }
