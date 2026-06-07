@@ -20,11 +20,12 @@ public final class DirectChatMapper {
             LocalDateTime lastMessageAt
     ) {
         User opponent = room.getOpponent(currentUserId);
+        boolean opponentLeft = room.hasOpponentLeft(currentUserId);
         return new DirectChatRoomResponse(
                 room.getDirectChatRoomId(),
                 opponent.getUserId(),
-                opponent.getNickname(),
-                opponent.getProfileImageUrl(),
+                opponentLeft ? "대화 상대 없음" : opponent.getNickname(),
+                opponentLeft ? null : opponent.getProfileImageUrl(),
                 lastMessage,
                 lastMessageAt,
                 0,
