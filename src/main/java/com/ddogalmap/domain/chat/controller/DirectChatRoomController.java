@@ -4,6 +4,7 @@ import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.request.DirectChatMessageRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
+import com.ddogalmap.domain.chat.dto.response.DirectChatRoomEventResponse;
 import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,6 +34,7 @@ import java.util.List;
 public class DirectChatRoomController {
 
     private final DirectChatRoomService directChatRoomService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Operation(
             summary = "개인 채팅방 생성 또는 조회",
@@ -82,6 +86,23 @@ public class DirectChatRoomController {
             @RequestParam(required = false) Integer size
     ) {
         return directChatRoomService.getDirectChatMessages(principal.userId(), directChatRoomId, size);
+    }
+
+    @Operation(
+            summary = "개인 채팅방 나가기",
+            description = "현재 로그인한 사용자의 개인 채팅방 연결을 끊고, 내 채팅 목록에서 숨깁니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{directChatRoomId}/leave")
+    public void leaveDirectChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long directChatRoomId
+    ) {
+        directChatRoomService.leaveDirectChatRoom(principal.userId(), directChatRoomId);
+        simpMessagingTemplate.convertAndSend(
+                "/topic/direct-chats/" + directChatRoomId,
+                DirectChatRoomEventResponse.left(directChatRoomId, principal.userId())
+        );
     }
 
     @Operation(
