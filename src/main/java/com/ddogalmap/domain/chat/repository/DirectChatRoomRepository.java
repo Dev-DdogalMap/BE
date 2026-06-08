@@ -81,4 +81,6 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
     List<MyChatRoomResponse> findAllByParticipantWithLatestMessage(
             @Param("currentUserId") Long currentUserId
     );
+
+    int countByReceiverUserId(Long receiverId);
 }
