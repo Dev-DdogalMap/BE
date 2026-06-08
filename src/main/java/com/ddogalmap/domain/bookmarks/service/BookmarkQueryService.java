@@ -6,12 +6,10 @@ import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantResponse;
 
 import java.util.List;
 
-//조회 전답 READ
+//조회 전용 READ
 public interface BookmarkQueryService {
 
     List<BookmarkCategoryResponse> getMyBookmarkCategories(Long userId);
-
-    List<BookmarkRestaurantResponse> getMyBookmarks(Long userId);
 
     List<BookmarkRestaurantResponse> getMyBookmarksByCategory(
             Long userId,
