@@ -128,6 +128,9 @@ public class UserController {
 		response.addHeader(HttpHeaders.SET_COOKIE, deleteRefreshTokenCookie.toString());
 
 		return ResponseEntity.noContent().build();
+	}
+
+	@Operation(
 			summary = "내 활동 내역 조회",
 			description = "현재 로그인한 사용자의 레벨 정보, 대표 뱃지, 최근 획득한 뱃지 3개를 조회합니다.",
 			security = @SecurityRequirement(name = "bearerAuth")

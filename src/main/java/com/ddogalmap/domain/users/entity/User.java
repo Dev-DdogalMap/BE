@@ -82,6 +82,8 @@ public class User extends BaseEntity {
         this.profileImageUrl = null;
         this.region = null;
         this.status = UserStatus.DELETED;
+    }
+
     public void updateRepresentativeBadge(Badge badge) {
         this.representativeBadge = badge;
     }
