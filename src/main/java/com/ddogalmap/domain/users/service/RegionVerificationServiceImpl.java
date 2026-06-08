@@ -1,14 +1,16 @@
 package com.ddogalmap.domain.users.service;
 
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
+import com.ddogalmap.domain.regions.entity.Region;
+import com.ddogalmap.domain.regions.repository.RegionRepository;
 import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
 import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
 import com.ddogalmap.domain.users.entity.GpsLog;
-import com.ddogalmap.domain.regions.entity.Region;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.entity.UserRegionAttempt;
 import com.ddogalmap.domain.users.repository.GpsLogRepository;
-import com.ddogalmap.domain.regions.repository.RegionRepository;
 import com.ddogalmap.domain.users.repository.UserRegionAttemptRepository;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +19,13 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
@@ -38,6 +43,7 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 	private final RegionRepository regionRepository;
 	private final GpsLogRepository gpsLogRepository;
 	private final UserRegionAttemptRepository userRegionAttemptRepository;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Override
 	public RegionVerificationStatusResponse getRegionVerification(Long userId) {
@@ -55,6 +61,13 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 				);
 
 		log.info("[내 동네 인증 정보 조회 완료] userId={}, verified={}, region={}", userId, response.verified(), response.eupmyeondongName());
+
+		// 경험치 이벤트 발행
+		applicationEventPublisher.publishEvent(
+				new LevelExpEvent(
+						userId,
+						ActivityType.LOCAL_AUTH_COMPLETE,
+						Long.valueOf(LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE))));
 
 		return response;
 	}

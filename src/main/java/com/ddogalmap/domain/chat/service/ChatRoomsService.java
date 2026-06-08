@@ -1,37 +1,32 @@
 package com.ddogalmap.domain.chat.service;
 
-import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
-import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
-import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole;
-import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.enumtype.Status;
-import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomMembersRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.foodtypes.entity.FoodType;
 import com.ddogalmap.domain.foodtypes.repository.FoodTypeRepository;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 
 @Service
@@ -46,6 +41,8 @@ public class ChatRoomsService {
     private final FoodTypeRepository foodTypeRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ImageUtilService imageUtilService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 그룹 채팅방 생성
@@ -133,6 +130,9 @@ public class ChatRoomsService {
 
         //그룹 채팅 참여인원 수정 - 동시성 문제를 막기 위해 원자적 update
         chatRoomsRepository.increaseParticipantCount(chatRoom.getId());
+
+        eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.GROUP_CHAT_JOIN, roomId));
+
         return new JoinChatRoomResponse(chatRoom.getId(), false);
     }
 

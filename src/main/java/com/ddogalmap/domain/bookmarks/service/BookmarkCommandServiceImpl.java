@@ -8,11 +8,14 @@ import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkCategoryRepository;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkRepository;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,7 @@ public class BookmarkCommandServiceImpl implements BookmarkCommandService {
     private final RestaurantRepository restaurantRepository;
     private final BookmarkCategoryRepository bookmarkCategoryRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public CreateBookmarkResponse createBookmark(Long userId, CreateBookmarkRequest request) {
@@ -50,6 +54,8 @@ public class BookmarkCommandServiceImpl implements BookmarkCommandService {
         );
 
         Bookmark savedBookmark = bookmarkRepository.save(bookmark);
+
+        eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.RESTAURANT_BOOKMARK, savedBookmark.getBookmarkId()));
 
         return new CreateBookmarkResponse(savedBookmark.getBookmarkId());
     }
