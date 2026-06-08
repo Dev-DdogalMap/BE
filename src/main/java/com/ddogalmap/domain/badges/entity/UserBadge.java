@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+
 public class UserBadge {
 
     @Id
@@ -36,13 +37,17 @@ public class UserBadge {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     @Builder
     private UserBadge(Badge badge, User user) {
         this.badge = badge;
         this.user = user;
-        this.createdAt = LocalDateTime.now();
     }
 }

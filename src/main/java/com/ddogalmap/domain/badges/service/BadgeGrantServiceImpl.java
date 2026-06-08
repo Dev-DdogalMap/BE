@@ -15,6 +15,7 @@ import com.ddogalmap.domain.visit.dto.projection.VisitVerificationCountProjectio
 import com.ddogalmap.domain.visit.repository.VisitVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -204,15 +205,19 @@ public class BadgeGrantServiceImpl implements BadgeGrantService {
                 .badge(badge)
                 .build();
 
-        userBadgeRepository.save(userBadge);
-        ownedBadgeIds.add(badge.getBadgeId());
+        try {
+            userBadgeRepository.saveAndFlush(userBadge);
+            ownedBadgeIds.add(badge.getBadgeId());
 
-        log.info(
-                "[Badge] 배지 획득. userId={}, badgeId={}, badgeName={}",
-                userId,
-                badge.getBadgeId(),
-                badge.getName()
-        );
+            log.info(
+                    "[Badge] 배지 획득. userId={}, badgeId={}, badgeName={}",
+                    userId,
+                    badge.getBadgeId(),
+                    badge.getName()
+            );
+        } catch (DataIntegrityViolationException e) {
+            ownedBadgeIds.add(badge.getBadgeId());
+        }
     }
 
     /**

@@ -1,18 +1,17 @@
 package com.ddogalmap.domain.badges.entity;
 
 import com.ddogalmap.domain.badges.enumtype.BadgeConditionType;
+import com.ddogalmap.domain.users.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "badges")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Badge {
+public class Badge extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,10 +30,4 @@ public class Badge {
 
     @Column(name = "condition_value", nullable = false)
     private int conditionValue;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 }
