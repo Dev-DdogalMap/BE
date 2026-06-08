@@ -2,6 +2,7 @@ package com.ddogalmap.domain.chat.service;
 
 import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
@@ -46,6 +47,7 @@ public class ChatRoomsService {
     private final FoodTypeRepository foodTypeRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ImageUtilService imageUtilService;
+    private final ChatRoomsTxService chatRoomsTxService;
 
     /**
      * 그룹 채팅방 생성
@@ -205,6 +207,17 @@ public class ChatRoomsService {
                         chatRoom.createdAt(),
                         chatRoom.latestMessageTime())).toList();
         return new ChatRoomListResponse(chatRoomSlice.hasNext(), chatRoomList);
+    }
+
+    /**
+     * 그룹 채팅방 수정
+     */
+    public UpdateChatRoomResponse updateChatRoom(Long ownerId, Long roomId, UpdateChatRoomRequest request) {
+        String oldImageKey = chatRoomsTxService.updateTxChatRooms(roomId, ownerId, request);
+
+        //S3 기존 이미지 삭제
+        imageUtilService.deleteS3Image(oldImageKey);
+        return new UpdateChatRoomResponse(roomId);
     }
 
     //채팅방 조회

@@ -3,6 +3,7 @@ package com.ddogalmap.domain.chat.repository;
 import com.ddogalmap.domain.chat.dto.groupChat.response.MemberInfo;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
+import com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,7 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
         where crm.chatRoom = :chatRooms
 """)
     List<MemberInfo> findAllByChatRoom(@Param("chatRooms") ChatRooms chatRooms);
+
+    //owner 검증
+    Boolean existsByChatRoom_idAndUser_UserIdAndRole(Long chatRoomId, Long userId, ChatRoomMemberRole role);
 }

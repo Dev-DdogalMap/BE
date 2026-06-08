@@ -2,11 +2,10 @@ package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
 import com.ddogalmap.domain.chat.service.ImageUtilService;
-import com.ddogalmap.domain.users.enumtype.UserRole;
-import com.ddogalmap.global.security.jwt.JwtTokenProvider;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -126,5 +125,18 @@ public class ChatRoomsController {
             Pageable pageable
     ) {
         return chatRoomsService.getChatRoomList(pageable);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 수정",
+            description = "그룹 채팅방 owner가 정보를 수정합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{roomId}")
+    public UpdateChatRoomResponse updateChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestBody UpdateChatRoomRequest request) {
+        return chatRoomsService.updateChatRoom(principal.userId(), roomId, request);
     }
 }
