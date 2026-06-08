@@ -268,7 +268,7 @@ public class UserActivityServiceImpl implements UserActivityService {
 
         List<BadgeResponse> recentBadges =
                 userBadgeRepository
-                        .findTop3ByUser_UserIdOrderByCreatedAtDesc(userId)
+                        .findRecentByUserId(userId, PageRequest.of(0, 3))
                         .stream()
                         .map(UserBadge::getBadge)
                         .map(BadgeResponse::from)
