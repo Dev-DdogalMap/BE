@@ -21,4 +21,10 @@ public interface BookmarkCategoryRepository extends JpaRepository<BookmarkCatego
     );
 
     long countByUser(User user);
+
+
+    Optional<BookmarkCategory> findByBookmarkCategoryIdAndUser_UserId(
+            Long bookmarkCategoryId,
+            Long userId
+    );
 }

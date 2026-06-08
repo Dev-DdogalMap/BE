@@ -1,6 +1,5 @@
 package com.ddogalmap.domain.bookmarks.service;
 
-import com.ddogalmap.domain.bookmarks.dto.request.CreateBookmarkRequest;
 import com.ddogalmap.domain.bookmarks.dto.response.*;
 import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
@@ -13,12 +12,14 @@ import com.ddogalmap.domain.reviews.repository.ReviewImgRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookmarkQueryServiceImpl implements BookmarkQueryService {
@@ -135,5 +136,56 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    }
+
+    @Override
+    public BookmarkCategoryRestaurantsResponse getBookmarkCategoryRestaurants(Long userId, Long bookmarkCategoryId) {
+
+        log.info(
+                "[BookmarkQueryService#getBookmarkCategoryRestaurants] START categoryId={}, userId={}",
+                bookmarkCategoryId,
+                userId
+        );
+
+        BookmarkCategory category =
+                bookmarkCategoryRepository
+                        .findByBookmarkCategoryIdAndUser_UserId(
+                                bookmarkCategoryId,
+                                userId
+                        )
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("북마크 카테고리를 찾을 수 없습니다.")
+                        );
+
+        List<BookmarkMapRestaurantResponse> restaurants =
+                bookmarkRepository
+                        .findBookmarkMapRestaurants(
+                                userId,
+                                bookmarkCategoryId
+                        )
+                        .stream()
+                        .map(restaurant -> new BookmarkMapRestaurantResponse(
+                                restaurant.getBookmarkId(),
+                                restaurant.getRestaurantId(),
+                                restaurant.getPlaceName(),
+                                restaurant.getFoodType(),
+                                restaurant.getAddressName(),
+                                restaurant.getLatitude(),
+                                restaurant.getLongitude()
+                        ))
+                        .toList();
+
+        log.info(
+                "[BookmarkQueryService#getBookmarkCategoryRestaurants] END categoryId={}, count={}",
+                bookmarkCategoryId,
+                restaurants.size()
+        );
+
+        return new BookmarkCategoryRestaurantsResponse(
+                category.getBookmarkCategoryId(),
+                category.getBookmarkCategoryName(),
+                restaurants.size(),
+                restaurants
+        );
     }
 }
