@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.badges.dto.ChatRequestReceivedEvent;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
@@ -21,12 +22,14 @@ import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class DirectChatRoomService {
     private final UserRepository userRepository;
     private final ChatRoomsRepository chatRoomsRepository;
     private final ImageUtilService imageUtilService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public DirectChatRoomResponse createOrGetDirectChatRoom(Long requesterId, CreateDirectChatRoomRequest request) {
@@ -50,9 +54,18 @@ public class DirectChatRoomService {
         User requester = getUser(requesterId);
         User receiver = getUser(targetUserId);
 
-        DirectChatRoom room = directChatRoomRepository.findBetweenUsers(requesterId, targetUserId)
+        Optional<DirectChatRoom> optionalDirectChatRoom = directChatRoomRepository.findBetweenUsers(requesterId, targetUserId);
+
+        boolean isNewRoom = optionalDirectChatRoom.isEmpty();
+
+        DirectChatRoom room = optionalDirectChatRoom
                 .orElseGet(() -> directChatRoomRepository.save(DirectChatRoom.create(requester, receiver)));
+
         room.restore(requesterId);
+
+        if(isNewRoom) {
+            eventPublisher.publishEvent(new ChatRequestReceivedEvent(receiver.getUserId()));
+        }
 
         ChatMessages latestMessage = directChatMessageRepository
                 .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())

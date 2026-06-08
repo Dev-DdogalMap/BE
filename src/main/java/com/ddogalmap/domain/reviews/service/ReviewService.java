@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.reviews.service;
 
+import com.ddogalmap.domain.badges.dto.ReviewCreatedEvent;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.reviews.dto.request.ReviewRequest;
@@ -70,6 +71,7 @@ public class ReviewService {
                 : ActivityType.REVIEW_WRITE;
 
         eventPublisher.publishEvent(new LevelExpEvent(userId, activityType, savedReview.getReviewId()));
+        eventPublisher.publishEvent(new ReviewCreatedEvent(userId, savedReview.getReviewId()));
 
         return savedReview.getReviewId();
     }

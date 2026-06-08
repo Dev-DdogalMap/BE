@@ -45,4 +45,26 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     List<String> findTop3TagsByRestaurantId(
             @Param("restaurantId") Long restaurantId
     );
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+    """)
+    int countByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+          and r.restaurant.foodType.foodTypeId in (
+              select bft.foodType.foodTypeId
+              from BadgeFoodType bft
+              where bft.badge.badgeId = :badgeId
+          )
+    """)
+    int countByUserIdAndBadgeFoodTypes(
+            @Param("userId") Long userId,
+            @Param("badgeId") Long badgeId
+    );
 }
