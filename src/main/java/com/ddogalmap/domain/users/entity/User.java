@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.users.entity;
 
+import com.ddogalmap.domain.badges.entity.Badge;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.enumtype.UserRole;
 import jakarta.persistence.*;
@@ -41,6 +42,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "representative_badge_id")
+    private Badge representativeBadge;
+
     protected User(Long kakaoId, String email, String nickname, String profileImageUrl, String region, UserRole role) {
         this.kakaoId = kakaoId;
         this.email = email;
@@ -63,5 +68,9 @@ public class User extends BaseEntity {
     public void updateRegion(String region, LocalDateTime regionVerifiedAt) {
         this.region = region;
         this.regionVerifiedAt = regionVerifiedAt;
+    }
+
+    public void updateRepresentativeBadge(Badge badge) {
+        this.representativeBadge = badge;
     }
 }

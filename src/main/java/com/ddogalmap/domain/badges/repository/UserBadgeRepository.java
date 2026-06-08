@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.badges.repository;
 
 import com.ddogalmap.domain.badges.entity.UserBadge;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +16,17 @@ public interface UserBadgeRepository extends JpaRepository<UserBadge, Long> {
         where ub.user.userId = :userId
     """)
     List<Long> findBadgeIdsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select ub from UserBadge ub
+        join fetch ub.badge
+        where ub.user.userId = :userId
+        order by ub.createdAt desc
+    """)
+    List<UserBadge> findRecentByUserId(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
+
+    boolean existsByBadge_BadgeIdAndUser_UserId(Long badgeId, Long userId);
 }
