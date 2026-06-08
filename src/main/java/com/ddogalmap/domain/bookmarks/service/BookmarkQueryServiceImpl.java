@@ -2,7 +2,7 @@ package com.ddogalmap.domain.bookmarks.service;
 
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryStatusResponse;
-import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantProjection;
+import com.ddogalmap.domain.bookmarks.dto.projection.BookmarkRestaurantProjection;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantResponse;
 import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;

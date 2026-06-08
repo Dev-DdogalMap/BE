@@ -1,4 +1,4 @@
-package com.ddogalmap.domain.bookmarks.dto.response;
+package com.ddogalmap.domain.bookmarks.dto.projection;
 
 import java.time.LocalDateTime;
 

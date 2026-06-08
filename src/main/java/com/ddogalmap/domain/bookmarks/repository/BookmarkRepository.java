@@ -1,6 +1,6 @@
 package com.ddogalmap.domain.bookmarks.repository;
 
-import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantProjection;
+import com.ddogalmap.domain.bookmarks.dto.projection.BookmarkRestaurantProjection;
 import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
