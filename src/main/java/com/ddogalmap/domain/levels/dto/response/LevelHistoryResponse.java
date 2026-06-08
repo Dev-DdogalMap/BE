@@ -2,12 +2,14 @@ package com.ddogalmap.domain.levels.dto.response;
 
 
 import com.ddogalmap.domain.levels.dto.projection.LevelHistoryProjection;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 
 import java.time.LocalDateTime;
 
 public record LevelHistoryResponse(
         Long historyId,
         String activityType,
+        String activityName,
         Integer expAmount,
         Integer level,
         String levelName,
@@ -15,9 +17,12 @@ public record LevelHistoryResponse(
 ) {
 
     public static LevelHistoryResponse from(LevelHistoryProjection projection) {
+        ActivityType activityType = ActivityType.valueOf(projection.getActivityType());
+
         return new LevelHistoryResponse(
                 projection.getHistoryId(),
                 projection.getActivityType(),
+                activityType.getDescription(),
                 projection.getExpAmount(),
                 projection.getLevel(),
                 projection.getLevelName(),
