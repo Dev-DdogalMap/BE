@@ -5,12 +5,15 @@ import com.ddogalmap.domain.chat.dto.groupChat.response.MemberInfo;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers, Long> {
@@ -43,4 +46,16 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
             where crm.chatRoom = :chatRooms
             """)
     List<MemberDetailInfo> findAllMembersByChatRoom(@Param("chatRooms") ChatRooms chatRooms);
+
+    Optional<ChatRoomMembers> findByChatRoom_idAndUser_userId(Long roomId, Long userId);
+
+    //OWNER 권한 멤버 조회 - 비관적 락
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+    select crm
+    from ChatRoomMembers crm
+    where crm.chatRoom.id = :roomId
+      and crm.role = com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole.OWNER
+""")
+    List<ChatRoomMembers> findOwnersForUpdate(Long roomId);
 }

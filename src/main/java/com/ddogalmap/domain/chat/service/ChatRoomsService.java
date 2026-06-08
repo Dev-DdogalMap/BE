@@ -223,6 +223,7 @@ public class ChatRoomsService {
     /**
      * 그룹 채팅방 참여 멤버 목록 조회
      */
+    @Transactional(readOnly = true)
     public ChatRoomMembersResponse getChatRoomMembers(Long userId, Long roomId) {
         //해당 방 멤버인지 검증
         if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
@@ -235,6 +236,26 @@ public class ChatRoomsService {
                 room.getMaxParticipantCount(),
                 members
         );
+    }
+
+    /**
+     * 그룹 채팅방 나가기
+     */
+    @Transactional
+    public LeaveChatRoomResponse leaveChatRoom(Long userId, Long roomId) {
+        //해당 방 멤버인지 검증 & 조회
+        ChatRoomMembers roomMember = chatRoomMembersRepository.findByChatRoom_idAndUser_userId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 그룹채팅의 멤버가 아닙니다."));
+
+        //권한이 OWNER인 경우 - OWNER가 1명이면 나가기 불가
+        if (roomMember.getRole() == ChatRoomMemberRole.OWNER) {
+            List<ChatRoomMembers> owners = chatRoomMembersRepository.findOwnersForUpdate(roomId);  //락
+            if (owners.size() <= 1) {
+                throw new IllegalStateException("마지막 OWNER는 나갈 수 없습니다.");
+            }
+        }
+        chatRoomMembersRepository.deleteById(roomMember.getId());
+        return new LeaveChatRoomResponse(roomId);
     }
 
     //채팅방 조회

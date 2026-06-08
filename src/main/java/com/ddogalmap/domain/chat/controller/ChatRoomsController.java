@@ -149,7 +149,18 @@ public class ChatRoomsController {
     public ChatRoomMembersResponse getChatRoomMembers(
             @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
             @PathVariable Long roomId) {
-
         return chatRoomsService.getChatRoomMembers(principal.userId(), roomId);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 나가기",
+            description = "그룹 채팅방에 참여한 사람이 방에서 나갑니다. OWNER가 1명 뿐일 경우, OWNER는 나갈 수 없습니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{roomId}")
+    public LeaveChatRoomResponse leaveChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
+            @PathVariable Long roomId) {
+        return chatRoomsService.leaveChatRoom(principal.userId(), roomId);
     }
 }
