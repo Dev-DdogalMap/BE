@@ -62,13 +62,6 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 
 		log.info("[내 동네 인증 정보 조회 완료] userId={}, verified={}, region={}", userId, response.verified(), response.eupmyeondongName());
 
-		// 경험치 이벤트 발행
-		applicationEventPublisher.publishEvent(
-				new LevelExpEvent(
-						userId,
-						ActivityType.LOCAL_AUTH_COMPLETE,
-						Long.valueOf(LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE))));
-
 		return response;
 	}
 
@@ -108,6 +101,12 @@ public class RegionVerificationServiceImpl implements RegionVerificationService 
 			user.updateRegion(region.getEupmyeondongName(), verifiedAt);
 			log.debug("[Region Verify] 사용자 지역 갱신 완료 - userId={}, region={}",
 					userId, region.getEupmyeondongName());
+
+			applicationEventPublisher.publishEvent(
+					new LevelExpEvent(
+							userId,
+							ActivityType.LOCAL_AUTH_COMPLETE,
+							Long.valueOf(LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE))));
 		}
 
 		return new RegionVerificationResponse(
