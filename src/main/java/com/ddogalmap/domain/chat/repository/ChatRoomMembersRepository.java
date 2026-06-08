@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.repository;
 
+import com.ddogalmap.domain.chat.dto.groupChat.response.MemberDetailInfo;
 import com.ddogalmap.domain.chat.dto.groupChat.response.MemberInfo;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
@@ -26,4 +27,20 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
 
     //owner 검증
     Boolean existsByChatRoom_idAndUser_UserIdAndRole(Long chatRoomId, Long userId, ChatRoomMemberRole role);
+
+    @Query("""
+            select new com.ddogalmap.domain.chat.dto.groupChat.response.MemberDetailInfo(
+                    u.userId,
+                    u.profileImageUrl,
+                    u.nickname,
+                    COALESCE(lv.level, 1),
+                    crm.role
+            )
+            from ChatRoomMembers crm
+            join crm.user u
+            left join UserLevel ul on ul.user = u
+            left join ul.level lv
+            where crm.chatRoom = :chatRooms
+            """)
+    List<MemberDetailInfo> findAllMembersByChatRoom(@Param("chatRooms") ChatRooms chatRooms);
 }

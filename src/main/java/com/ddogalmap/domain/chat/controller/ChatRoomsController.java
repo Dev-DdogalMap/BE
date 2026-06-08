@@ -139,4 +139,17 @@ public class ChatRoomsController {
             @RequestBody UpdateChatRoomRequest request) {
         return chatRoomsService.updateChatRoom(principal.userId(), roomId, request);
     }
+
+    @Operation(
+            summary = "그룹 채팅방 멤버 목록 조회",
+            description = "그룹 채팅방에 참여한 멤버 목록을 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{roomId}/members")
+    public ChatRoomMembersResponse getChatRoomMembers(
+            @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
+            @PathVariable Long roomId) {
+
+        return chatRoomsService.getChatRoomMembers(principal.userId(), roomId);
+    }
 }

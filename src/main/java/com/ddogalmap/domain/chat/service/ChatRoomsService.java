@@ -114,7 +114,7 @@ public class ChatRoomsService {
     @Transactional
     public JoinChatRoomResponse joinChatRoom(Long userId, Long roomId) {
         User user = userRepository.getReferenceById(userId);  //FK 연결만 하면 되서 프록시 객체만 필요
-        ChatRooms chatRoom = chatRoomsRepository.findById(roomId).orElseThrow();
+        ChatRooms chatRoom = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
 
         //중복 참여 검증
         if (chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
@@ -218,6 +218,23 @@ public class ChatRoomsService {
         //S3 기존 이미지 삭제
         imageUtilService.deleteS3Image(oldImageKey);
         return new UpdateChatRoomResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 참여 멤버 목록 조회
+     */
+    public ChatRoomMembersResponse getChatRoomMembers(Long userId, Long roomId) {
+        //해당 방 멤버인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다.");
+        }
+        ChatRooms room = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
+        List<MemberDetailInfo> members = chatRoomMembersRepository.findAllMembersByChatRoom(room);
+        return new ChatRoomMembersResponse(
+                room.getParticipantCount(),
+                room.getMaxParticipantCount(),
+                members
+        );
     }
 
     //채팅방 조회
