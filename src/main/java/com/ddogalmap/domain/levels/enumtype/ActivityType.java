@@ -14,6 +14,6 @@ public enum ActivityType {
     REVIEW_PHOTO("사진 포함 리뷰 작성"),
     RESTAURANT_BOOKMARK("맛집 북마크"),
     GROUP_CHAT_JOIN("그룹 채팅방 참여"),
-    CHAT_RESPONSE("찐맛집러 채팅 응답");
+    CHAT_RESPONSE("채팅 요청");
     private final String description;
 }
