@@ -27,4 +27,12 @@ public interface UserLevelRepository extends JpaRepository<UserLevel, Long> {
     Optional<UserLevel> findForUpdate(@Param("userId") Long userId);
 
     boolean existsByUserUserId(Long userId);
+
+    @Query("""
+        select ul
+        from UserLevel ul
+        join fetch ul.level
+        where ul.user.userId = :userId
+    """)
+    Optional<UserLevel> findByUserIdWithLevel(@Param("userId") Long userId);
 }

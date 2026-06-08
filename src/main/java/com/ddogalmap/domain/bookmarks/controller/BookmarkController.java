@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,4 +61,24 @@ public class BookmarkController {
                 restaurantId
         );
     }
+
+    @Operation(
+            summary = "북마크 카테고리 내 맛집 목록 조회",
+            description = "로그인한 사용자가 생성한 특정 북마크 폴더에 저장한 맛집 목록을 조회합니다."
+    )
+    @GetMapping("/{bookmarkCategoryId}/restaurants")
+    public ResponseEntity<BookmarkCategoryRestaurantsResponse> getBookmarkCategoryRestaurants(
+            @PathVariable Long bookmarkCategoryId,
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
+
+        return ResponseEntity.ok(
+                bookmarkQueryService.getBookmarkCategoryRestaurants(
+                        user.userId(),
+                        bookmarkCategoryId
+                )
+        );
+    }
+
+
 }

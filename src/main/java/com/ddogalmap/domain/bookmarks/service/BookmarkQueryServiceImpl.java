@@ -4,6 +4,7 @@ import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryStatusResponse;
 import com.ddogalmap.domain.bookmarks.dto.projection.BookmarkRestaurantProjection;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantResponse;
+import com.ddogalmap.domain.bookmarks.dto.response.*;
 import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkCategoryRepository;
@@ -13,6 +14,7 @@ import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BookmarkQueryServiceImpl implements BookmarkQueryService {
@@ -131,5 +134,52 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+    }
+
+    @Override
+    public BookmarkCategoryRestaurantsResponse getBookmarkCategoryRestaurants(Long userId, Long bookmarkCategoryId) {
+
+        log.info(
+                "[BookmarkQueryService#getBookmarkCategoryRestaurants] START categoryId={}, userId={}",
+                bookmarkCategoryId,
+                userId
+        );
+
+        User user = getUser(userId);
+
+        BookmarkCategory bookmarkCategory = bookmarkCategoryRepository
+                .findByBookmarkCategoryIdAndUser(bookmarkCategoryId, user)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 북마크 카테고리입니다."));
+
+        List<BookmarkMapRestaurantResponse> restaurants =
+                bookmarkRepository
+                        .findBookmarkMapRestaurants(
+                                userId,
+                                bookmarkCategoryId
+                        )
+                        .stream()
+                        .map(restaurant -> new BookmarkMapRestaurantResponse(
+                                restaurant.getBookmarkId(),
+                                restaurant.getRestaurantId(),
+                                restaurant.getPlaceName(),
+                                restaurant.getFoodType(),
+                                restaurant.getAddressName(),
+                                restaurant.getLatitude(),
+                                restaurant.getLongitude()
+                        ))
+                        .toList();
+
+        log.info(
+                "[BookmarkQueryService#getBookmarkCategoryRestaurants] END categoryId={}, count={}",
+                bookmarkCategoryId,
+                restaurants.size()
+        );
+
+        return new BookmarkCategoryRestaurantsResponse(
+                bookmarkCategory.getBookmarkCategoryId(),
+                bookmarkCategory.getBookmarkCategoryName(),
+                restaurants.size(),
+                restaurants
+        );
     }
 }

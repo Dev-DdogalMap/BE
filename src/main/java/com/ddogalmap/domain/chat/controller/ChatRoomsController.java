@@ -2,11 +2,10 @@ package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.service.ChatRoomsService;
 import com.ddogalmap.domain.chat.service.ImageUtilService;
-import com.ddogalmap.domain.users.enumtype.UserRole;
-import com.ddogalmap.global.security.jwt.JwtTokenProvider;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -126,5 +125,42 @@ public class ChatRoomsController {
             Pageable pageable
     ) {
         return chatRoomsService.getChatRoomList(pageable);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 수정",
+            description = "그룹 채팅방 owner가 정보를 수정합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{roomId}")
+    public UpdateChatRoomResponse updateChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestBody UpdateChatRoomRequest request) {
+        return chatRoomsService.updateChatRoom(principal.userId(), roomId, request);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 멤버 목록 조회",
+            description = "그룹 채팅방에 참여한 멤버 목록을 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/{roomId}/members")
+    public ChatRoomMembersResponse getChatRoomMembers(
+            @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
+            @PathVariable Long roomId) {
+        return chatRoomsService.getChatRoomMembers(principal.userId(), roomId);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 나가기",
+            description = "그룹 채팅방에 참여한 사람이 방에서 나갑니다. OWNER가 1명 뿐일 경우, OWNER는 나갈 수 없습니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{roomId}")
+    public LeaveChatRoomResponse leaveChatRoom(
+            @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
+            @PathVariable Long roomId) {
+        return chatRoomsService.leaveChatRoom(principal.userId(), roomId);
     }
 }

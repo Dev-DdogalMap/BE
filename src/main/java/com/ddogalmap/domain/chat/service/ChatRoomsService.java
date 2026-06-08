@@ -1,37 +1,33 @@
 package com.ddogalmap.domain.chat.service;
 
-import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
-import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.ChatRoomMembers;
 import com.ddogalmap.domain.chat.entity.ChatRooms;
-import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole;
-import com.ddogalmap.domain.chat.enumtype.ChatRoomType;
 import com.ddogalmap.domain.chat.enumtype.Status;
-import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomMembersRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.foodtypes.entity.FoodType;
 import com.ddogalmap.domain.foodtypes.repository.FoodTypeRepository;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 
 @Service
@@ -46,6 +42,9 @@ public class ChatRoomsService {
     private final FoodTypeRepository foodTypeRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ImageUtilService imageUtilService;
+    private final ChatRoomsTxService chatRoomsTxService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 그룹 채팅방 생성
@@ -112,7 +111,7 @@ public class ChatRoomsService {
     @Transactional
     public JoinChatRoomResponse joinChatRoom(Long userId, Long roomId) {
         User user = userRepository.getReferenceById(userId);  //FK 연결만 하면 되서 프록시 객체만 필요
-        ChatRooms chatRoom = chatRoomsRepository.findById(roomId).orElseThrow();
+        ChatRooms chatRoom = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
 
         //중복 참여 검증
         if (chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
@@ -133,6 +132,9 @@ public class ChatRoomsService {
 
         //그룹 채팅 참여인원 수정 - 동시성 문제를 막기 위해 원자적 update
         chatRoomsRepository.increaseParticipantCount(chatRoom.getId());
+
+        eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.GROUP_CHAT_JOIN, roomId));
+
         return new JoinChatRoomResponse(chatRoom.getId(), false);
     }
 
@@ -205,6 +207,55 @@ public class ChatRoomsService {
                         chatRoom.createdAt(),
                         chatRoom.latestMessageTime())).toList();
         return new ChatRoomListResponse(chatRoomSlice.hasNext(), chatRoomList);
+    }
+
+    /**
+     * 그룹 채팅방 수정
+     */
+    public UpdateChatRoomResponse updateChatRoom(Long ownerId, Long roomId, UpdateChatRoomRequest request) {
+        String oldImageKey = chatRoomsTxService.updateTxChatRooms(roomId, ownerId, request);
+
+        //S3 기존 이미지 삭제
+        imageUtilService.deleteS3Image(oldImageKey);
+        return new UpdateChatRoomResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 참여 멤버 목록 조회
+     */
+    @Transactional(readOnly = true)
+    public ChatRoomMembersResponse getChatRoomMembers(Long userId, Long roomId) {
+        //해당 방 멤버인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다.");
+        }
+        ChatRooms room = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
+        List<MemberDetailInfo> members = chatRoomMembersRepository.findAllMembersByChatRoom(room);
+        return new ChatRoomMembersResponse(
+                room.getParticipantCount(),
+                room.getMaxParticipantCount(),
+                members
+        );
+    }
+
+    /**
+     * 그룹 채팅방 나가기
+     */
+    @Transactional
+    public LeaveChatRoomResponse leaveChatRoom(Long userId, Long roomId) {
+        //해당 방 멤버인지 검증 & 조회
+        ChatRoomMembers roomMember = chatRoomMembersRepository.findByChatRoom_idAndUser_userId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 그룹채팅의 멤버가 아닙니다."));
+
+        //권한이 OWNER인 경우 - OWNER가 1명이면 나가기 불가
+        if (roomMember.getRole() == ChatRoomMemberRole.OWNER) {
+            List<ChatRoomMembers> owners = chatRoomMembersRepository.findOwnersForUpdate(roomId);  //락
+            if (owners.size() <= 1) {
+                throw new IllegalStateException("마지막 OWNER는 나갈 수 없습니다.");
+            }
+        }
+        chatRoomMembersRepository.deleteById(roomMember.getId());
+        return new LeaveChatRoomResponse(roomId);
     }
 
     //채팅방 조회
