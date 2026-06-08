@@ -15,4 +15,15 @@ public interface UserBadgeRepository extends JpaRepository<UserBadge, Long> {
         where ub.user.userId = :userId
     """)
     List<Long> findBadgeIdsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select ub from UserBadge ub
+        join fetch ub.badge
+        where ub.user.userId = :userId
+        order by ub.createdAt desc
+        limit 3
+    """)
+    List<UserBadge> findTop3ByUser_UserIdOrderByCreatedAtDesc(Long userId);
+
+    boolean existsByBadge_BadgeIdAndUser_UserId(Long badgeId, Long userId);
 }

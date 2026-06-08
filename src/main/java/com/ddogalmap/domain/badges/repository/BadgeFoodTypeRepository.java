@@ -21,4 +21,12 @@ public interface BadgeFoodTypeRepository extends JpaRepository<BadgeFoodType, Lo
             @Param("foodTypeId") Long foodTypeId,
             @Param("conditionType") BadgeConditionType conditionType
     );
+
+    @Query("""
+        select bft
+        from BadgeFoodType bft
+        join fetch bft.badge
+        join fetch bft.foodType
+    """)
+    List<BadgeFoodType> findAllWithBadgeAndFoodType();
 }
