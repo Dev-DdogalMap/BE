@@ -147,15 +147,11 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
                 userId
         );
 
-        BookmarkCategory category =
-                bookmarkCategoryRepository
-                        .findByBookmarkCategoryIdAndUser_UserId(
-                                bookmarkCategoryId,
-                                userId
-                        )
-                        .orElseThrow(() ->
-                                new IllegalArgumentException("북마크 카테고리를 찾을 수 없습니다.")
-                        );
+        User user = getUser(userId);
+
+        BookmarkCategory bookmarkCategory = bookmarkCategoryRepository
+                .findByBookmarkCategoryIdAndUser(bookmarkCategoryId, user)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 북마크 카테고리입니다."));
 
         List<BookmarkMapRestaurantResponse> restaurants =
                 bookmarkRepository
@@ -182,8 +178,8 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
         );
 
         return new BookmarkCategoryRestaurantsResponse(
-                category.getBookmarkCategoryId(),
-                category.getBookmarkCategoryName(),
+                bookmarkCategory.getBookmarkCategoryId(),
+                bookmarkCategory.getBookmarkCategoryName(),
                 restaurants.size(),
                 restaurants
         );
