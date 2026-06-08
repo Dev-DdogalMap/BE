@@ -18,6 +18,8 @@ import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
@@ -65,6 +67,7 @@ public class DirectChatRoomService {
 
         if(isNewRoom) {
             eventPublisher.publishEvent(new ChatRequestReceivedEvent(receiver.getUserId()));
+            eventPublisher.publishEvent(new LevelExpEvent(receiver.getUserId(), ActivityType.CHAT_RESPONSE, room.getDirectChatRoomId()));
         }
 
         ChatMessages latestMessage = directChatMessageRepository
