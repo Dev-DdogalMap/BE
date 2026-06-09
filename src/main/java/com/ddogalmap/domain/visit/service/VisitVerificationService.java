@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.visit.service;
 
+import com.ddogalmap.domain.badges.dto.VisitVerifiedEvent;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
@@ -73,6 +74,7 @@ public class VisitVerificationService {
 
         // 경험치 이벤트 발행
         eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.VISIT_VERIFY, saved.getId()));
+        eventPublisher.publishEvent(new VisitVerifiedEvent(user.getUserId()));
 
         return new VisitVerificationResponse(
                 saved.getId(),

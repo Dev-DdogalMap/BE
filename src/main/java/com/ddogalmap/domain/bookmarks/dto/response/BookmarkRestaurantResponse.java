@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.bookmarks.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record BookmarkRestaurantResponse(
         Long bookmarkId,
@@ -10,6 +11,10 @@ public record BookmarkRestaurantResponse(
         String address,
         String imageUrl,
         String memo,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+
+        Double averageScore,
+        Long reviewCount,
+        List<String> topTags
 ) {
 }

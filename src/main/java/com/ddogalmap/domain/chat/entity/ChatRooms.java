@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.entity;
 
+import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.foodtypes.entity.FoodType;
 import com.ddogalmap.domain.users.BaseEntity;
 import jakarta.persistence.*;
@@ -35,4 +36,14 @@ public class ChatRooms extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "food_type_id")
     private FoodType foodType;
+
+    public void updateChatRoom(UpdateChatRoomRequest request, String imageKey, FoodType foodType) {
+        this.roomName = request.roomName();
+        this.region = request.region();
+        this.maxParticipantCount = request.maxParticipantCount();
+        this.foodType = foodType;
+        if (imageKey != null) {
+            this.imageUrl = imageKey;
+        }
+    }
 }

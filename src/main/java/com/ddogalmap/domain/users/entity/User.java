@@ -1,7 +1,9 @@
 package com.ddogalmap.domain.users.entity;
 
+import com.ddogalmap.domain.badges.entity.Badge;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.enumtype.UserRole;
+import com.ddogalmap.domain.users.enumtype.UserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,7 +21,7 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private Long kakaoId;
 
     @Column(length = 255)
@@ -34,6 +36,10 @@ public class User extends BaseEntity {
     @Column(length = 100)
     private String region;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+
     private LocalDateTime regionVerifiedAt;
 
     @Column(name = "is_chat_enabled", nullable = false)
@@ -43,6 +49,10 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "representative_badge_id")
+    private Badge representativeBadge;
 
     protected User(Long kakaoId, String email, String nickname, String profileImageUrl, String region, UserRole role) {
         this.kakaoId = kakaoId;
@@ -70,5 +80,16 @@ public class User extends BaseEntity {
 
     public void updateChatEnabled(Boolean chatEnabled) {
         this.chatEnabled = chatEnabled;
+    public void withdraw() {
+        this.kakaoId = null;
+        this.email = null;
+        this.nickname = "탈퇴한 사용자";
+        this.profileImageUrl = null;
+        this.region = null;
+        this.status = UserStatus.DELETED;
+    }
+
+    public void updateRepresentativeBadge(Badge badge) {
+        this.representativeBadge = badge;
     }
 }

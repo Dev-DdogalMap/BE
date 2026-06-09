@@ -18,4 +18,11 @@ public class AsyncConfig {
                 Executors.newVirtualThreadPerTaskExecutor()
         );
     }
+
+    @Bean(name = "badgeEventExecutor")
+    public AsyncTaskExecutor badgeEventExecutor() {
+        return new TaskExecutorAdapter(
+                Executors.newVirtualThreadPerTaskExecutor()
+        );
+    }
 }
