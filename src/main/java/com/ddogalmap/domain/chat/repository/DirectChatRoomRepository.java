@@ -44,22 +44,30 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
         CASE WHEN dcr.requester.userId = :currentUserId 
              THEN dcr.receiver.userId 
              ELSE dcr.requester.userId END,
-        CASE
-             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
-             THEN '대화 상대 없음'
-             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
-             THEN '대화 상대 없음'
-             WHEN dcr.requester.userId = :currentUserId
-             THEN dcr.receiver.nickname
-             ELSE dcr.requester.nickname
-        END,
-        CASE
-             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
-             THEN NULL
-             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
-             THEN NULL
-             WHEN dcr.requester.userId = :currentUserId
-             THEN dcr.receiver.profileImageUrl
+	        CASE
+	             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
+	             THEN '대화 상대 없음'
+	             WHEN dcr.requester.userId = :currentUserId AND dcr.receiver.status = 'DELETED'
+	             THEN '대화 상대 없음'
+	             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
+	             THEN '대화 상대 없음'
+	             WHEN dcr.receiver.userId = :currentUserId AND dcr.requester.status = 'DELETED'
+	             THEN '대화 상대 없음'
+	             WHEN dcr.requester.userId = :currentUserId
+	             THEN dcr.receiver.nickname
+	             ELSE dcr.requester.nickname
+	        END,
+	        CASE
+	             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
+	             THEN NULL
+	             WHEN dcr.requester.userId = :currentUserId AND dcr.receiver.status = 'DELETED'
+	             THEN NULL
+	             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
+	             THEN NULL
+	             WHEN dcr.receiver.userId = :currentUserId AND dcr.requester.status = 'DELETED'
+	             THEN NULL
+	             WHEN dcr.requester.userId = :currentUserId
+	             THEN dcr.receiver.profileImageUrl
              ELSE dcr.requester.profileImageUrl
         END,
         (SELECT dm.message FROM ChatMessages dm 
@@ -81,6 +89,18 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
     List<MyChatRoomResponse> findAllByParticipantWithLatestMessage(
             @Param("currentUserId") Long currentUserId
     );
+
+    @EntityGraph(attributePaths = {"requester", "receiver"})
+    @Query("""
+            select d
+            from DirectChatRoom d
+            where d.deletedAt is null
+              and (
+                   (d.requester.userId = :userId and d.requesterLeftAt is null)
+                or (d.receiver.userId = :userId and d.receiverLeftAt is null)
+              )
+            """)
+    List<DirectChatRoom> findActiveRoomsByParticipant(@Param("userId") Long userId);
 
     int countByReceiverUserId(Long receiverId);
 }
