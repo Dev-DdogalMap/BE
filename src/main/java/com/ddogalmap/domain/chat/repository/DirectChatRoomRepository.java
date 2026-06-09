@@ -1,6 +1,5 @@
 package com.ddogalmap.domain.chat.repository;
 
-import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.dto.response.MyChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,8 +16,11 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
     @Query("""
             select d
             from DirectChatRoom d
-            where (d.requester.userId = :userA and d.receiver.userId = :userB)
-               or (d.requester.userId = :userB and d.receiver.userId = :userA)
+            where d.deletedAt is null
+              and (
+                   (d.requester.userId = :userA and d.receiver.userId = :userB)
+                or (d.requester.userId = :userB and d.receiver.userId = :userA)
+              )
             """)
     Optional<DirectChatRoom> findBetweenUsers(@Param("userA") Long userA, @Param("userB") Long userB);
 
@@ -26,8 +28,11 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
     @Query("""
             select d
             from DirectChatRoom d
-            where d.requester.userId = :userId
-               or d.receiver.userId = :userId
+            where d.deletedAt is null
+              and (
+                   (d.requester.userId = :userId and d.requesterLeftAt is null)
+                or (d.receiver.userId = :userId and d.receiverLeftAt is null)
+              )
             order by d.updatedAt desc, d.directChatRoomId desc
             """)
     List<DirectChatRoom> findAllByParticipant(@Param("userId") Long userId);
@@ -39,12 +44,24 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
         CASE WHEN dcr.requester.userId = :currentUserId 
              THEN dcr.receiver.userId 
              ELSE dcr.requester.userId END,
-        CASE WHEN dcr.requester.userId = :currentUserId 
-             THEN dcr.receiver.nickname 
-             ELSE dcr.requester.nickname END,
-        CASE WHEN dcr.requester.userId = :currentUserId 
-             THEN dcr.receiver.profileImageUrl 
-             ELSE dcr.requester.profileImageUrl END,
+        CASE
+             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
+             THEN '대화 상대 없음'
+             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
+             THEN '대화 상대 없음'
+             WHEN dcr.requester.userId = :currentUserId
+             THEN dcr.receiver.nickname
+             ELSE dcr.requester.nickname
+        END,
+        CASE
+             WHEN dcr.requester.userId = :currentUserId AND dcr.receiverLeftAt IS NOT NULL
+             THEN NULL
+             WHEN dcr.receiver.userId = :currentUserId AND dcr.requesterLeftAt IS NOT NULL
+             THEN NULL
+             WHEN dcr.requester.userId = :currentUserId
+             THEN dcr.receiver.profileImageUrl
+             ELSE dcr.requester.profileImageUrl
+        END,
         (SELECT dm.message FROM ChatMessages dm 
              WHERE dm.directChatRoom = dcr 
              ORDER BY dm.createdAt DESC, dm.chatMessageId DESC LIMIT 1),
@@ -55,10 +72,15 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
         "DIRECT"
     )
     FROM DirectChatRoom dcr
-    WHERE dcr.requester.userId = :currentUserId 
-       OR dcr.receiver.userId = :currentUserId
+    WHERE dcr.deletedAt IS NULL
+      AND (
+           (dcr.requester.userId = :currentUserId AND dcr.requesterLeftAt IS NULL)
+        OR (dcr.receiver.userId = :currentUserId AND dcr.receiverLeftAt IS NULL)
+      )
 """)
     List<MyChatRoomResponse> findAllByParticipantWithLatestMessage(
             @Param("currentUserId") Long currentUserId
     );
+
+    int countByReceiverUserId(Long receiverId);
 }

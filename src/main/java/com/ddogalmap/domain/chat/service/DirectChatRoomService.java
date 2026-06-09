@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.badges.dto.ChatRequestReceivedEvent;
 import com.ddogalmap.domain.chat.dto.request.ChatMessageSendRequest;
 import com.ddogalmap.domain.chat.dto.request.CreateDirectChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.response.DirectChatMessageResponse;
@@ -17,17 +18,20 @@ import com.ddogalmap.domain.chat.mapper.DirectChatMapper;
 import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +44,7 @@ public class DirectChatRoomService {
     private final UserRepository userRepository;
     private final ChatRoomsRepository chatRoomsRepository;
     private final ImageUtilService imageUtilService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public DirectChatRoomResponse createOrGetDirectChatRoom(Long requesterId, CreateDirectChatRoomRequest request) {
@@ -51,8 +56,19 @@ public class DirectChatRoomService {
         User requester = getUser(requesterId);
         User receiver = getUser(targetUserId);
 
-        DirectChatRoom room = directChatRoomRepository.findBetweenUsers(requesterId, targetUserId)
+        Optional<DirectChatRoom> optionalDirectChatRoom = directChatRoomRepository.findBetweenUsers(requesterId, targetUserId);
+
+        boolean isNewRoom = optionalDirectChatRoom.isEmpty();
+
+        DirectChatRoom room = optionalDirectChatRoom
                 .orElseGet(() -> directChatRoomRepository.save(DirectChatRoom.create(requester, receiver)));
+
+        room.restore(requesterId);
+
+        if(isNewRoom) {
+            eventPublisher.publishEvent(new ChatRequestReceivedEvent(receiver.getUserId()));
+            eventPublisher.publishEvent(new LevelExpEvent(receiver.getUserId(), ActivityType.CHAT_RESPONSE, room.getDirectChatRoomId()));
+        }
 
         ChatMessages latestMessage = directChatMessageRepository
                 .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
@@ -93,7 +109,7 @@ public class DirectChatRoomService {
 
     @Transactional(readOnly = true)
     public List<DirectChatMessageResponse> getDirectChatMessages(Long currentUserId, Long directChatRoomId, Integer size) {
-        DirectChatRoom room = getParticipatingRoom(currentUserId, directChatRoomId);
+        DirectChatRoom room = getVisibleRoom(currentUserId, directChatRoomId);
         int pageSize = size == null || size < 1 ? DEFAULT_MESSAGE_PAGE_SIZE : Math.min(size, 100);
 
         return directChatMessageRepository.findRecentMessages(
@@ -118,7 +134,7 @@ public class DirectChatRoomService {
             throw new MessageBlankException("메시지 내용은 비어 있을 수 없습니다.");
         }
 
-        DirectChatRoom room = getParticipatingRoom(senderId, request.roomId());
+        DirectChatRoom room = getVisibleRoom(senderId, request.roomId());
         User sender = getUser(senderId);
         ChatMessages message = directChatMessageRepository.save(
                 ChatMessages.create(
@@ -134,7 +150,7 @@ public class DirectChatRoomService {
 
     @Transactional(readOnly = true)
     public DirectChatRoomResponse getDirectChatRoom(Long currentUserId, Long directChatRoomId) {
-        DirectChatRoom room = getParticipatingRoom(currentUserId, directChatRoomId);
+        DirectChatRoom room = getVisibleRoom(currentUserId, directChatRoomId);
         ChatMessages latestMessage = directChatMessageRepository
                 .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                 .orElse(null);
@@ -145,6 +161,23 @@ public class DirectChatRoomService {
                 latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt()
         );
+    }
+
+    @Transactional
+    public void leaveDirectChatRoom(Long currentUserId, Long directChatRoomId) {
+        DirectChatRoom room = getParticipatingRoom(currentUserId, directChatRoomId);
+        if (room.isDeleted()) {
+            throw new DirectChatRoomNotFoundException("개인 채팅방이 존재하지 않습니다. id=" + directChatRoomId);
+        }
+        room.leave(currentUserId);
+    }
+
+    private DirectChatRoom getVisibleRoom(Long userId, Long directChatRoomId) {
+        DirectChatRoom room = getParticipatingRoom(userId, directChatRoomId);
+        if (!room.isVisibleTo(userId)) {
+            throw new NotChatRoomMemberException("나간 개인 채팅방에는 접근할 수 없습니다.");
+        }
+        return room;
     }
 
     private DirectChatRoom getParticipatingRoom(Long userId, Long directChatRoomId) {

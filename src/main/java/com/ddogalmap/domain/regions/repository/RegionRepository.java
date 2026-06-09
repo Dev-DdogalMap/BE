@@ -10,16 +10,23 @@ import java.util.Optional;
 
 public interface RegionRepository extends JpaRepository<Region, Long> {
 
-    List<Region> findAllByOrderBySidoNameAscSigunguNameAscEupmyeondongNameAsc();
+	List<Region> findAllByOrderBySidoNameAscSigunguNameAscEupmyeondongNameAsc();
 
-    @Query(value = """
+	@Query(value = """
         SELECT r.*
         FROM regions r
-        WHERE ST_Contains(
+        WHERE ST_Covers(
             r.geom,
             ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)
         )
+        ORDER BY
+            CASE
+                WHEN ST_Contains(r.geom, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)) THEN 0
+                ELSE 1
+            END,
+            r.region_id
         LIMIT 1
     """, nativeQuery = true)
-    Optional<com.ddogalmap.domain.regions.entity.Region> findRegionByPoint(@Param("lat") double lat, @Param("lng") double lng);
+	Optional<Region> findRegionByPoint(@Param("lat") double lat, @Param("lng") double lng);
+
 }

@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.reviews.repository;
 
+import com.ddogalmap.domain.reviews.dto.projection.FoodTypeReviewCountProjection;
 import com.ddogalmap.domain.reviews.entity.Review;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -44,5 +45,39 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     """, nativeQuery = true)
     List<String> findTop3TagsByRestaurantId(
             @Param("restaurantId") Long restaurantId
+    );
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+    """)
+    int countByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+          and r.restaurant.foodType.foodTypeId in (
+              select bft.foodType.foodTypeId
+              from BadgeFoodType bft
+              where bft.badge.badgeId = :badgeId
+          )
+    """)
+    int countByUserIdAndBadgeFoodTypes(
+            @Param("userId") Long userId,
+            @Param("badgeId") Long badgeId
+    );
+
+    @Query("""
+        select
+            r.restaurant.foodType.foodTypeId as foodTypeId,
+            count(r) as reviewCount
+        from Review r
+        where r.user.userId = :userId
+        group by r.restaurant.foodType.foodTypeId
+    """)
+    List<FoodTypeReviewCountProjection> countReviewsGroupByFoodType(
+            @Param("userId") Long userId
     );
 }
