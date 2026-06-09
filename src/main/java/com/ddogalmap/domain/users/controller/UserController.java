@@ -3,13 +3,8 @@ package com.ddogalmap.domain.users.controller;
 import com.ddogalmap.domain.badges.dto.response.BadgeResponse;
 import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.request.ChatPreferenceUpdateRequest;
-import com.ddogalmap.domain.users.dto.response.ChatPreferenceResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
-import com.ddogalmap.domain.users.dto.request.RepresentativeBadgeUpdateRequest;
 import com.ddogalmap.domain.users.dto.response.*;
-import com.ddogalmap.domain.users.dto.response.ActivityDetailResponse;
-import com.ddogalmap.domain.users.dto.response.ActivityResponse;
+import com.ddogalmap.domain.users.dto.request.RepresentativeBadgeUpdateRequest;
 import com.ddogalmap.domain.users.service.RegionVerificationService;
 import com.ddogalmap.domain.users.service.UserStatsService;
 import com.ddogalmap.domain.users.service.UserWithdrawalService;
@@ -37,6 +32,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
+@SecurityRequirement(name = "bearerAuth")
 @Slf4j
 public class UserController {
 
@@ -234,7 +230,7 @@ public class UserController {
                 """
 	)
 	@GetMapping("/me/stats")
-	public UserStatsResponse getMyStats(	@AuthenticationPrincipal UserPrincipal user) {
+	public UserStatsResponse getMyStats(@AuthenticationPrincipal UserPrincipal user) {
 		return userStatsService.getMyStats(user.userId());
 	}
 
