@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.ddogalmap.domain.bookmarks.enumtype.BookmarkSortType;
 
 import java.util.List;
 
@@ -74,11 +75,13 @@ public class BookmarkCategoryController {
     @GetMapping("/{bookmarkCategoryId}/bookmarks")
     public List<BookmarkRestaurantResponse> getMyBookmarksByCategory(
             @AuthenticationPrincipal UserPrincipal userPrincipal,
-            @PathVariable Long bookmarkCategoryId
+            @PathVariable Long bookmarkCategoryId,
+            @RequestParam(defaultValue = "LATEST") BookmarkSortType sort
     ) {
         return bookmarkQueryService.getMyBookmarksByCategory(
                 userPrincipal.userId(),
-                bookmarkCategoryId
+                bookmarkCategoryId,
+                sort
         );
     }
 

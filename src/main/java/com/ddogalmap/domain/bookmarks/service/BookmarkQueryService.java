@@ -4,6 +4,7 @@ import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryRestaurantsResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkCategoryStatusResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantResponse;
+import com.ddogalmap.domain.bookmarks.enumtype.BookmarkSortType;
 
 import java.util.List;
 
@@ -15,7 +16,8 @@ public interface BookmarkQueryService {
 
 	List<BookmarkRestaurantResponse> getMyBookmarksByCategory(
 			Long userId,
-			Long bookmarkCategoryId
+			Long bookmarkCategoryId,
+			BookmarkSortType sort
 	);
 
 	List<BookmarkCategoryStatusResponse> getBookmarkCategoryStatuses(
