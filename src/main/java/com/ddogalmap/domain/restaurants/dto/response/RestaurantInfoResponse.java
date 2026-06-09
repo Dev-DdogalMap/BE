@@ -9,7 +9,6 @@ public record RestaurantInfoResponse(
 		String placeName,
 		String roadAddressName,
 		String phone,
-		String placeUrl,
 		Double latitude,
 		Double longitude,
 		String foodType,
@@ -27,14 +26,14 @@ public record RestaurantInfoResponse(
 	public static RestaurantInfoResponse from(
 			RestaurantInfoProjection projection,
 			String imageUrl,
-			List<String> topTags
+			List<String> topTags,
+			Double foodScore
 	) {
 		return new RestaurantInfoResponse(
 				projection.getRestaurantId(),
 				projection.getPlaceName(),
 				projection.getRoadAddressName(),
 				projection.getPhone(),
-				projection.getPlaceUrl(),
 				projection.getLatitude(),
 				projection.getLongitude(),
 				projection.getFoodType(),

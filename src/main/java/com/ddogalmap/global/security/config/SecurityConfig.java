@@ -38,7 +38,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/ws-chat/**",
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/kakao/**",
@@ -53,6 +54,8 @@ public class SecurityConfig {
                                 "/api/regions/tree",
                                 "/api/taste-experts"
                         ).permitAll()
+                        // 💡 마이페이지 관련 API는 인증된 유저만 접근 가능하도록 설정
+                        .requestMatchers("/api/my/**").authenticated()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/restaurants/*/review")
                         .authenticated()

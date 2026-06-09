@@ -2,6 +2,8 @@ package com.ddogalmap.domain.reviews.repository;
 
 import com.ddogalmap.domain.reviews.dto.projection.FoodTypeReviewCountProjection;
 import com.ddogalmap.domain.reviews.entity.Review;
+import com.ddogalmap.domain.visit.entity.VisitVerification;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +16,9 @@ import java.util.Optional;
 public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRepositoryCustom {
     // 특정 식당의 리뷰를 최신슨 둥의 조건에 맞춰 페이징 조회
     Slice<Review> findByRestaurantId(Long restaurantId, Pageable pageable);
+    Page<Review> findByUserId(Long userId, Pageable pageable);
+
+    boolean existsByVisitVerification(VisitVerification visitVerification);
 
     @Query(value = """
         SELECT ri.img_url
