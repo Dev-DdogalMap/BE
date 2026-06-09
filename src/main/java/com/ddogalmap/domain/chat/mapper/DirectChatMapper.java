@@ -5,6 +5,7 @@ import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.users.entity.User;
+import com.ddogalmap.domain.users.enumtype.UserStatus;
 
 import java.time.LocalDateTime;
 
@@ -24,16 +25,17 @@ public final class DirectChatMapper {
             Boolean targetCertified
     ) {
         User opponent = room.getOpponent(currentUserId);
-        boolean opponentLeft = room.hasOpponentLeft(currentUserId);
+        boolean opponentUnavailable = room.hasOpponentLeft(currentUserId)
+                || opponent.getStatus() == UserStatus.DELETED;
         return new DirectChatRoomResponse(
                 room.getDirectChatRoomId(),
                 opponent.getUserId(),
-                opponentLeft ? "대화 상대 없음" : opponent.getNickname(),
-                opponentLeft ? null : opponent.getProfileImageUrl(),
-                opponentLeft ? null : targetLevel,
-                opponentLeft ? null : targetLevelName,
-                opponentLeft ? null : targetSpecialty,
-                opponentLeft ? false : targetCertified,
+                opponentUnavailable ? "대화 상대 없음" : opponent.getNickname(),
+                opponentUnavailable ? null : opponent.getProfileImageUrl(),
+                opponentUnavailable ? null : targetLevel,
+                opponentUnavailable ? null : targetLevelName,
+                opponentUnavailable ? null : targetSpecialty,
+                opponentUnavailable ? false : targetCertified,
                 lastMessage,
                 lastMessageAt,
                 0,

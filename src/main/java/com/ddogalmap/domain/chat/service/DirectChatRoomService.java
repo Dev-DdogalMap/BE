@@ -24,6 +24,7 @@ import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.levels.repository.UserLevelRepository;
 import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import com.ddogalmap.domain.users.entity.User;
+import com.ddogalmap.domain.users.enumtype.UserStatus;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import com.ddogalmap.domain.visit.repository.VisitVerificationRepository;
@@ -147,6 +148,10 @@ public class DirectChatRoomService {
         }
 
         DirectChatRoom room = getVisibleRoom(senderId, request.roomId());
+        if (room.hasOpponentLeft(senderId) || room.getOpponent(senderId).getStatus() == UserStatus.DELETED) {
+            throw new InvalidDirectChatRequestException("대화 상대가 없는 개인 채팅방에는 메시지를 보낼 수 없습니다.");
+        }
+
         User sender = getUser(senderId);
         ChatMessages message = directChatMessageRepository.save(
                 ChatMessages.create(
