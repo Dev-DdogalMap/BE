@@ -14,8 +14,9 @@ import java.util.Optional;
  * 식당 통계 (restaurant_stats) 일배치 스케줄러.
  *
  * - 매일 새벽 3시에 실행
- * - 마지막 배치 이후 활동(reviews/bookmarks/visit_verifications)이 있었던
+ * - 마지막 배치 이후 활동(reviews / visit_verifications)이 있었던
  *   식당만 재계산 (incremental)
+ *   · bookmarks 는 산식에 포함되지 않으므로 트리거에서 제외
  * - 처음 실행 시 (stats 비어있음)에는 전체 식당 일괄 계산
  */
 @Slf4j

@@ -64,9 +64,10 @@ public class RestaurantAdminController {
     @Operation(
             summary = "찐맛집지수 통계 전체 재계산 (restaurant_stats)",
             description = """
-                    모든 식당에 대해 찐맛집지수/주민추천비율/재방문율/방문인증수/즐겨찾기수/평균별점/리뷰개수를
+                    모든 식당에 대해 찐맛집지수/주민추천비율/재방문율/방문인증수/평균별점/리뷰개수를
                     다시 계산해서 restaurant_stats 테이블에 UPSERT.
 
+                    - 즐겨찾기 수는 stats 에 저장하지 않음 (상세 페이지에서 bookmarks 직접 COUNT)
                     - 최초 1회 (배치 초기화) 또는 산식 변경 후 강제 갱신용
                     - 일배치 스케줄러는 매일 새벽 3시에 incremental 처리됨
                     - 청크 단위(1000개)로 처리

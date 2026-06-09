@@ -48,6 +48,9 @@ public interface RestaurantStatsRepository extends JpaRepository<RestaurantStats
      * 주어진 식당 ID 리스트에 대해 통계를 계산하여 UPSERT.
      * - 기존 row 있으면 UPDATE, 없으면 INSERT (ON CONFLICT)
      * - 한 번의 SQL로 모든 집계 + 가중합 + 저장 처리
+     * - <b>review_count > 0 인 식당만 row 생성/갱신</b>.
+     *   리뷰가 0 인 식당은 stats 테이블에 row 가 만들어지지 않고,
+     *   조회 시 LEFT JOIN 결과 NULL 로 처리됨 (화면에서 "계산중" 표시).
      */
     @Modifying
     @Query(value = """
