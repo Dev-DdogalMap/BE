@@ -2,6 +2,7 @@ package com.ddogalmap.domain.restaurants.controller;
 
 import com.ddogalmap.domain.restaurants.dto.ImportResult;
 import com.ddogalmap.domain.restaurants.service.RestaurantImportService;
+import com.ddogalmap.domain.restaurants.service.RestaurantStatsCalculator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class RestaurantAdminController {
 
     private final RestaurantImportService importService;
+    private final RestaurantStatsCalculator statsCalculator;
 
     @Operation(
             summary = "서울시 일반음식점 인허가 데이터 일괄 적재",
@@ -57,5 +59,21 @@ public class RestaurantAdminController {
             @RequestParam(defaultValue = "1") int startPage
     ) {
         return importService.importAllNational(startPage);
+    }
+
+    @Operation(
+            summary = "찐맛집지수 통계 전체 재계산 (restaurant_stats)",
+            description = """
+                    모든 식당에 대해 찐맛집지수/주민추천비율/재방문율/방문인증수/즐겨찾기수/평균별점/리뷰개수를
+                    다시 계산해서 restaurant_stats 테이블에 UPSERT.
+
+                    - 최초 1회 (배치 초기화) 또는 산식 변경 후 강제 갱신용
+                    - 일배치 스케줄러는 매일 새벽 3시에 incremental 처리됨
+                    - 청크 단위(1000개)로 처리
+                    """
+    )
+    @PostMapping("/stats/recalculate-all")
+    public int recalculateAllStats() {
+        return statsCalculator.recalculateAll();
     }
 }
