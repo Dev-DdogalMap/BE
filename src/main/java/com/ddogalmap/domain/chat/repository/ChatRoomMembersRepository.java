@@ -62,4 +62,12 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
     Optional<ChatRoomMembers> findByChatRoom_idAndUser_UserId(Long roomId, Long userId);
 
     void deleteAllByChatRoom_idAndUser_UserIdIn(Long roomId, List<Long> userIds);
+
+    @Query("""
+        select crm
+        from ChatRoomMembers crm
+        where crm.chatRoom.id = :roomId
+        and crm.user.userId in :userIds
+""")
+    List<ChatRoomMembers> findGrantedMember(Long roomId, List<Long> userIds);
 }

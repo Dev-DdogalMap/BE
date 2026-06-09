@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomGrantRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomKickRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
@@ -177,5 +178,19 @@ public class ChatRoomsController {
             @RequestBody ChatRoomKickRequest request
     ) {
         return chatRoomsService.kick(principal.userId(), roomId, request);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 OWNER권한 부여",
+            description = "그룹 채팅방의 OWNER가 MEMBER에게 OWNER권한을 부여합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{roomId}/grant")
+    public ChatRoomGrantResponse grant(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestBody ChatRoomGrantRequest request
+    ) {
+        return chatRoomsService.grant(principal.userId(), roomId, request);
     }
 }

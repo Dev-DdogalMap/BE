@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomGrantRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomKickRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
@@ -264,9 +265,23 @@ public class ChatRoomsService {
             throw new IllegalArgumentException("해당 그룹 채팅방의 OWNER가 아닙니다.");
         }
 
-        chatRoomMembersRepository.deleteAllByChatRoom_idAndUser_UserIdIn(roomId, request.kickUserIds());
-        chatRoomsRepository.reduceCountOnKick(roomId, request.kickUserIds().size());  //인원수 차감
+        chatRoomMembersRepository.deleteAllByChatRoom_idAndUser_UserIdIn(roomId, request.kickedUserIds());
+        chatRoomsRepository.reduceCountOnKick(roomId, request.kickedUserIds().size());  //인원수 차감
         return new ChatRoomKickResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 OWNER 권한 부여
+     */
+    @Transactional
+    public ChatRoomGrantResponse grant(Long userId, Long roomId, ChatRoomGrantRequest request) {
+        // 해당 방의 OWNER인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserIdAndRole(roomId, userId, ChatRoomMemberRole.OWNER)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 OWNER가 아닙니다.");
+        }
+        List<ChatRoomMembers> members = chatRoomMembersRepository.findGrantedMember(roomId, request.grantedUserIds());
+        members.forEach(ChatRoomMembers::grantOwner);  //권한부여
+        return new ChatRoomGrantResponse(roomId);
     }
 
     //채팅방 조회
