@@ -71,7 +71,6 @@ public class BookmarkController {
             @PathVariable Long bookmarkCategoryId,
             @AuthenticationPrincipal UserPrincipal user
     ) {
-
         return ResponseEntity.ok(
                 bookmarkQueryService.getBookmarkCategoryRestaurants(
                         user.userId(),
