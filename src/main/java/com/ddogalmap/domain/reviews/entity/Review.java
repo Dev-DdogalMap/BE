@@ -3,6 +3,7 @@ package com.ddogalmap.domain.reviews.entity;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
 import com.ddogalmap.domain.reviews.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
+import com.ddogalmap.domain.visit.entity.VisitVerification;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -38,6 +39,13 @@ public class Review extends BaseEntity{
     @Column(name = "restaurant_id", nullable = false)
     private Long restaurantId;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "visit_verification_id")
+    private VisitVerification visitVerification;
+
+    public void setVisitVerification(VisitVerification visitVerification) {
+        this.visitVerification = visitVerification;
+    }
 
 
     // 태그 관련 설정
