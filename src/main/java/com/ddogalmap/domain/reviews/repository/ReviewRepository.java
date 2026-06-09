@@ -80,4 +80,19 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     List<FoodTypeReviewCountProjection> countReviewsGroupByFoodType(
             @Param("userId") Long userId
     );
+
+    @Query(value = """
+        SELECT CONCAT(ft.type, ' 전문')
+        FROM reviews r
+        JOIN restaurants rt
+            ON rt.restaurant_id = r.restaurant_id
+        JOIN food_types ft
+            ON ft.food_type_id = rt.food_type_id
+        WHERE r.user_id = :userId
+        GROUP BY ft.type
+        ORDER BY COUNT(*) DESC,
+                 MAX(r.created_at) DESC
+        LIMIT 1
+    """, nativeQuery = true)
+    Optional<String> findTopSpecialtyByUserId(@Param("userId") Long userId);
 }
