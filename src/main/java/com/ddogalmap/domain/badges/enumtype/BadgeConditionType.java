@@ -7,4 +7,5 @@ public enum BadgeConditionType {
     CHAT_REQUEST_RECEIVED,
     MORNING_VISIT_COUNT,
     NIGHT_VISIT_COUNT,
+    NEW_USER
 }

@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.badges.event;
 
 import com.ddogalmap.domain.badges.dto.ChatRequestReceivedEvent;
+import com.ddogalmap.domain.badges.dto.NewUserCreatedEvent;
 import com.ddogalmap.domain.badges.dto.ReviewCreatedEvent;
 import com.ddogalmap.domain.badges.dto.VisitVerifiedEvent;
 import com.ddogalmap.domain.badges.service.BadgeGrantService;
@@ -50,5 +51,13 @@ public class BadgeEventListener {
     )
     public void handleChatRequestReceivedEvent(ChatRequestReceivedEvent event) {
         badgeGrantService.checkChatRequestReceivedBadge(event.receiverId());
+    }
+
+    @Async("badgeEventExecutor")
+    @TransactionalEventListener(
+            phase = TransactionPhase.AFTER_COMMIT
+    )
+    public void handleNewUserCreatedEvent(NewUserCreatedEvent event) {
+        badgeGrantService.grantNewUserBadge(event.userId());
     }
 }

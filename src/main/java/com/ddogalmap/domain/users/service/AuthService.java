@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.users.service;
 
+import com.ddogalmap.domain.badges.dto.NewUserCreatedEvent;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkCategoryRepository;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
@@ -103,6 +104,9 @@ public class AuthService {
                     bookmarkCategoryRepository.save(
                             BookmarkCategory.createDefault(savedUser)
                     );
+
+                    // 신규 가입 회원 배지 흭득 이벤트 발행
+                    eventPublisher.publishEvent(new NewUserCreatedEvent(savedUser.getUserId()));
 
                     return savedUser;
                 });

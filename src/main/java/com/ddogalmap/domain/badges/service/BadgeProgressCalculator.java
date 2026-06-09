@@ -47,6 +47,7 @@ public class BadgeProgressCalculator {
             case MORNING_VISIT_COUNT  -> summary.visitCount().getMorningCount();
             case NIGHT_VISIT_COUNT    -> summary.visitCount().getNightCount();
             case CHAT_REQUEST_RECEIVED -> summary.receivedChatRequestCount();
+            default -> 0;
         };
     }
 }
