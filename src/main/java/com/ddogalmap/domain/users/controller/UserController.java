@@ -3,13 +3,10 @@ package com.ddogalmap.domain.users.controller;
 import com.ddogalmap.domain.badges.dto.response.BadgeResponse;
 import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.request.ChatPreferenceUpdateRequest;
-import com.ddogalmap.domain.users.dto.response.ChatPreferenceResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
+import com.ddogalmap.domain.users.dto.response.*;
 import com.ddogalmap.domain.users.dto.request.RepresentativeBadgeUpdateRequest;
-import com.ddogalmap.domain.users.dto.response.ActivityDetailResponse;
-import com.ddogalmap.domain.users.dto.response.ActivityResponse;
 import com.ddogalmap.domain.users.service.RegionVerificationService;
+import com.ddogalmap.domain.users.service.UserStatsService;
 import com.ddogalmap.domain.users.service.UserWithdrawalService;
 import com.ddogalmap.domain.users.service.UserActivityService;
 import com.ddogalmap.domain.users.service.UserPreferenceService;
@@ -35,6 +32,7 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
+@SecurityRequirement(name = "bearerAuth")
 @Slf4j
 public class UserController {
 
@@ -42,6 +40,7 @@ public class UserController {
 	private final UserPreferenceService userPreferenceService;
 	private final UserWithdrawalService userWithdrawalService;
 	private final UserActivityService userActivityService;
+	private final UserStatsService userStatsService;
 
 	@Operation(
 			summary = "내 정보 조회",
@@ -222,4 +221,19 @@ public class UserController {
 				)
 		);
 	}
+
+	@Operation(
+			summary = "내 전체 활동 수 조회",
+			description = """
+                마이페이지에 표시되는 로그인 사용자의 활동 통계를 조회합니다.
+                - 조회 항목: 방문 인증 수, 작성한 후기 수, 북마크 수, 참여 중인 채팅방 수
+                """
+	)
+	@GetMapping("/me/stats")
+	public UserStatsResponse getMyStats(@AuthenticationPrincipal UserPrincipal user) {
+		return userStatsService.getMyStats(user.userId());
+	}
+
+
+
 }
