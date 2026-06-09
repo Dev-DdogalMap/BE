@@ -255,6 +255,7 @@ public class ChatRoomsService {
             }
         }
         chatRoomMembersRepository.deleteById(roomMember.getId());
+        chatRoomsRepository.decreaseParticipantCount(roomId);  //현재 인원 원자적 업데이트
         return new LeaveChatRoomResponse(roomId);
     }
 

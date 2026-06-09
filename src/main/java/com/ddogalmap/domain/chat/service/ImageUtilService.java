@@ -65,10 +65,9 @@ public class ImageUtilService {
 
     //S3 이미지 삭제
     public void deleteS3Image(String key) {
-        if (key == null || key.isEmpty()) {
-            throw new IllegalArgumentException("이미지 Key가 null이거나 비었습니다.");
+        if (key == null || key.isEmpty() || key.equals(DEFAULT_IMAGE)) {  //기본 이미지면 삭제x
+            return;
         }
-
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucket)
                 .key(key)

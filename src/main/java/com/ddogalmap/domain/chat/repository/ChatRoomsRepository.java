@@ -10,6 +10,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -59,4 +60,8 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
                     ORDER BY cr.createdAt DESC
             """)
     List<MyChatRoomResponse> findMyChatRooms(User user);
+
+    @Modifying
+    @Query("UPDATE ChatRooms c SET c.participantCount = c.participantCount - 1 WHERE c.id = :roomId")
+    void decreaseParticipantCount(@Param("roomId") Long roomId);
 }

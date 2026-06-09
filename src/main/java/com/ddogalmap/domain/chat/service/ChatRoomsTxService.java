@@ -36,7 +36,7 @@ public class ChatRoomsTxService {
             throw new IllegalArgumentException("최대 인원이 현재 인원보다 적습니다.");
         }
         String oldImageKey = room.getImageUrl();  //기존키 꺼내기
-        room.updateChatRoom(request, request.imageKey() == null? DEFAULT_IMAGE : request.imageKey(), foodType);
-        return oldImageKey;
+        room.updateChatRoom(request, request.imageKey(), foodType);
+        return request.imageKey() == null? null : oldImageKey;  //사진 수정 안하는 경우엔 old키로 삭제하면 안됨
     }
 }
