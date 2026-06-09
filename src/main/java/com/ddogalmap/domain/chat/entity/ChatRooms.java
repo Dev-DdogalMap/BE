@@ -42,6 +42,8 @@ public class ChatRooms extends BaseEntity {
         this.region = request.region();
         this.maxParticipantCount = request.maxParticipantCount();
         this.foodType = foodType;
-        this.imageUrl = imageKey;
+        if (imageKey != null) {
+            this.imageUrl = imageKey;
+        }
     }
 }
