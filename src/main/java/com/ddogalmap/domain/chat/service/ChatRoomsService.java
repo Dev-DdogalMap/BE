@@ -217,13 +217,15 @@ public class ChatRoomsService {
      */
     @Transactional(readOnly = true)
     public ChatRoomMembersResponse getChatRoomMembers(Long userId, Long roomId) {
-        //해당 방 멤버인지 검증
-        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
-            throw new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다.");
-        }
+        // 해당 방 멤버인지 검증
+        ChatRoomMembers currentMember = chatRoomMembersRepository
+                .findByChatRoom_idAndUser_UserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다."));
+
         ChatRooms room = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
         List<MemberDetailInfo> members = chatRoomMembersRepository.findAllMembersByChatRoom(room);
         return new ChatRoomMembersResponse(
+                currentMember.getRole(),
                 room.getParticipantCount(),
                 room.getMaxParticipantCount(),
                 members

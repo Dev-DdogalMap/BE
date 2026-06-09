@@ -58,4 +58,6 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
       and crm.role = com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole.OWNER
 """)
     List<ChatRoomMembers> findOwnersForUpdate(Long roomId);
+
+    Optional<ChatRoomMembers> findByChatRoom_idAndUser_UserId(Long roomId, Long userId);
 }
