@@ -7,10 +7,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 @Tag(name = "Restaurant Admin", description = "음식점 데이터 적재 (관리용)")
 @RestController
@@ -67,6 +70,8 @@ public class RestaurantAdminController {
                     모든 식당에 대해 찐맛집지수/주민추천비율/재방문율/방문인증수/평균별점/리뷰개수를
                     다시 계산해서 restaurant_stats 테이블에 UPSERT.
 
+                    - 비동기 실행: 호출 즉시 202 Accepted 반환, 실제 처리는 백그라운드 쓰레드에서 진행
+                    - 결과는 서버 로그(RestaurantStatsCalculator)로 확인
                     - 즐겨찾기 수는 stats 에 저장하지 않음 (상세 페이지에서 bookmarks 직접 COUNT)
                     - 최초 1회 (배치 초기화) 또는 산식 변경 후 강제 갱신용
                     - 일배치 스케줄러는 매일 새벽 3시에 incremental 처리됨
@@ -74,7 +79,9 @@ public class RestaurantAdminController {
                     """
     )
     @PostMapping("/stats/recalculate-all")
-    public int recalculateAllStats() {
-        return statsCalculator.recalculateAll();
+    public ResponseEntity<Map<String, String>> recalculateAllStats() {
+        statsCalculator.recalculateAllAsync();
+        return ResponseEntity.accepted()
+                .body(Map.of("message", "전체 재계산이 백그라운드에서 시작되었습니다. 진행 상황은 서버 로그를 확인하세요."));
     }
 }

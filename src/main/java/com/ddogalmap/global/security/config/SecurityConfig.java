@@ -61,7 +61,7 @@ public class SecurityConfig {
                                 "/api/restaurants/search",
                                 "/api/food-types")
                         .permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

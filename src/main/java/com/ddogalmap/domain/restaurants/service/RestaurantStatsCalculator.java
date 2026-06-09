@@ -3,6 +3,7 @@ package com.ddogalmap.domain.restaurants.service;
 import com.ddogalmap.domain.restaurants.repository.RestaurantStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,11 +48,30 @@ public class RestaurantStatsCalculator {
 
     /**
      * 전체 식당 통계 재계산 (최초 1회 또는 강제 갱신용).
+     * 동기 호출. 청크 단위로 처리하지만 모든 청크를 한 트랜잭션에서 처리.
      */
     @Transactional
     public int recalculateAll() {
         List<Long> allIds = statsRepository.findAllRestaurantIds();
         log.info("[RestaurantStatsCalculator] 전체 재계산 시작 - 대상 식당 {} 개", allIds.size());
         return recalculate(allIds);
+    }
+
+    /**
+     * 전체 식당 통계 재계산을 백그라운드로 비동기 실행.
+     * 호출 즉시 반환 → admin API 가 HTTP 요청 쓰레드를 점유하지 않음.
+     * 결과는 로그로만 확인.
+     */
+    @Async
+    public void recalculateAllAsync() {
+        long start = System.currentTimeMillis();
+        try {
+            int affected = recalculateAll();
+            long elapsed = System.currentTimeMillis() - start;
+            log.info("[RestaurantStatsCalculator] 비동기 전체 재계산 완료. 처리={} 식당, 소요={}ms",
+                    affected, elapsed);
+        } catch (Exception e) {
+            log.error("[RestaurantStatsCalculator] 비동기 전체 재계산 실패", e);
+        }
     }
 }
