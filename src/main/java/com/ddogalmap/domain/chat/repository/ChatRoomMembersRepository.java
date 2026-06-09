@@ -60,4 +60,6 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
     List<ChatRoomMembers> findOwnersForUpdate(Long roomId);
 
     Optional<ChatRoomMembers> findByChatRoom_idAndUser_UserId(Long roomId, Long userId);
+
+    void deleteAllByChatRoom_idAndUser_UserIdIn(Long roomId, List<Long> userIds);
 }

@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomKickRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
@@ -251,6 +252,21 @@ public class ChatRoomsService {
         chatRoomMembersRepository.deleteById(roomMember.getId());
         chatRoomsRepository.decreaseParticipantCount(roomId);  //현재 인원 원자적 업데이트
         return new LeaveChatRoomResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 강퇴(OWNER권한 필요)
+     */
+    @Transactional
+    public ChatRoomKickResponse kick(Long userId, Long roomId, ChatRoomKickRequest request) {
+        // 해당 방의 OWNER인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserIdAndRole(roomId, userId, ChatRoomMemberRole.OWNER)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 OWNER가 아닙니다.");
+        }
+
+        chatRoomMembersRepository.deleteAllByChatRoom_idAndUser_UserIdIn(roomId, request.kickUserIds());
+        chatRoomsRepository.reduceCountOnKick(roomId, request.kickUserIds().size());  //인원수 차감
+        return new ChatRoomKickResponse(roomId);
     }
 
     //채팅방 조회
