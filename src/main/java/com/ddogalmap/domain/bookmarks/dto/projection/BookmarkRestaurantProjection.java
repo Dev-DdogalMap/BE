@@ -23,5 +23,7 @@ public interface BookmarkRestaurantProjection {
 
     Long getReviewCount();
 
+    Double getFoodScore();
+
     String getTopTags();
 }

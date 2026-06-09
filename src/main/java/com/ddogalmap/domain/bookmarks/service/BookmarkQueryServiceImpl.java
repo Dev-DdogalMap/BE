@@ -7,6 +7,7 @@ import com.ddogalmap.domain.bookmarks.dto.response.BookmarkRestaurantResponse;
 import com.ddogalmap.domain.bookmarks.dto.response.*;
 import com.ddogalmap.domain.bookmarks.entity.Bookmark;
 import com.ddogalmap.domain.bookmarks.entity.BookmarkCategory;
+import com.ddogalmap.domain.bookmarks.enumtype.BookmarkSortType;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkCategoryRepository;
 import com.ddogalmap.domain.bookmarks.repository.BookmarkRepository;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
@@ -51,14 +52,15 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
     @Override
     public List<BookmarkRestaurantResponse> getMyBookmarksByCategory(
             Long userId,
-            Long bookmarkCategoryId
+            Long bookmarkCategoryId,
+            BookmarkSortType sort
     ) {
         User user = getUser(userId);
 
         bookmarkCategoryRepository.findByBookmarkCategoryIdAndUser(bookmarkCategoryId, user)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 즐겨찾기 카테고리입니다."));
 
-        return bookmarkRepository.findBookmarkRestaurantsByCategory(userId, bookmarkCategoryId)
+        return bookmarkRepository.findBookmarkRestaurantsByCategory(userId, bookmarkCategoryId, sort.name())
                 .stream()
                 .map(this::toBookmarkRestaurantResponse)
                 .toList();
@@ -116,6 +118,7 @@ public class BookmarkQueryServiceImpl implements BookmarkQueryService {
                 projection.getCreatedAt(),
                 projection.getAverageScore(),
                 projection.getReviewCount(),
+                projection.getFoodScore(),
                 parseTags(projection.getTopTags())
         );
     }

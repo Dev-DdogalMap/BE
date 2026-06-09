@@ -15,6 +15,7 @@ public record BookmarkRestaurantResponse(
 
         Double averageScore,
         Long reviewCount,
+        Double foodScore,
         List<String> topTags
 ) {
 }
