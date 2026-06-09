@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.chat.repository;
 
+import com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -40,4 +41,24 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessages, Long>
             order by m.createdAt desc, m.chatMessageId desc
             """)
     List<ChatMessages> findGroupRecentMessages(@Param("roomId") Long roomId, Pageable pageable);
+
+    @Query("""
+            select new com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse(
+                        m.chatMessageId,
+                        m.chatRoom.id,
+                        u.userId,
+                        u.nickname,
+                        u.profileImageUrl,
+                        COALESCE(lv.level, 1),
+                        m.status,
+                        m.message,
+                        m.createdAt)
+            from ChatMessages m
+            join m.writer u
+            left join UserLevel ul on ul.user = u
+            left join ul.level lv
+            where m.chatRoom.id = :roomId
+            order by m.createdAt desc, m.chatMessageId desc
+            """)
+    List<ChatMessageResponse> findGroupRecentMessageV2(@Param("roomId") Long roomId, Pageable pageable);
 }

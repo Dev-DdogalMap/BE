@@ -19,6 +19,7 @@ import com.ddogalmap.domain.chat.repository.ChatRoomMembersRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.foodtypes.entity.FoodType;
 import com.ddogalmap.domain.foodtypes.repository.FoodTypeRepository;
+import com.ddogalmap.domain.levels.repository.UserLevelRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class ChatRoomsService {
     private final ChatMessageRepository chatMessageRepository;
     private final ImageUtilService imageUtilService;
     private final ChatRoomsTxService chatRoomsTxService;
+    private final UserLevelRepository userLevelRepository;
 
     /**
      * 그룹 채팅방 생성
@@ -85,26 +87,11 @@ public class ChatRoomsService {
         ChatRooms room = getParticipatingRoom(userId, roomId);
         int pageSize = size == null || size < 1 ? DEFAULT_MESSAGE_PAGE_SIZE : Math.min(size, 100);
 
-        return chatMessageRepository.findGroupRecentMessages(
+        return chatMessageRepository.findGroupRecentMessageV2(
                         room.getId(),
-                        PageRequest.of(0, pageSize)
-                ).stream()
-                .sorted(Comparator.comparing(ChatMessages::getCreatedAt)
-                        .thenComparing(ChatMessages::getChatMessageId))
-                .map(chatMessages -> {
-                    User user = chatMessages.getWriter();
-
-                    return new ChatMessageResponse(
-                        chatMessages.getChatMessageId(),
-                        room.getId(),
-                        user.getUserId(),
-                        user.getNickname(),
-                        user.getProfileImageUrl(),
-                        12,  //이거 레벨 조회해서 넣어야함
-                        chatMessages.getStatus(),
-                        chatMessages.getMessage(),
-                        chatMessages.getCreatedAt());
-                })
+                        PageRequest.of(0, pageSize)).stream()
+                .sorted(Comparator.comparing(ChatMessageResponse::createdAt)
+                        .thenComparing(ChatMessageResponse::chatMessageId))
                 .toList();
     }
 
@@ -162,12 +149,17 @@ public class ChatRoomsService {
                         .status(Status.SENT)
                         .build()
         );
+        //레벨 조회
+        int level = userLevelRepository.findByUser(writer)
+                .map(ul -> ul.getLevel().getLevel())
+                .orElse(1);  // 없으면 기본값 1
+
         return new ChatMessageResponse(
                 message.getChatMessageId(),
                 room.getId(), writer.getUserId(),
                 writer.getNickname(),
                 writer.getProfileImageUrl(),
-                12,  //이거 레벨 조회해서 넣어야함
+                level,
                 message.getStatus(),
                 message.getMessage(),
                 message.getCreatedAt());

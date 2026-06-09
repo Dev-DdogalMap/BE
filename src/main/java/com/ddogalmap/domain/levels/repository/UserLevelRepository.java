@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.levels.repository;
 
 import com.ddogalmap.domain.levels.entity.UserLevel;
+import com.ddogalmap.domain.users.entity.User;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,4 +28,6 @@ public interface UserLevelRepository extends JpaRepository<UserLevel, Long> {
     Optional<UserLevel> findForUpdate(@Param("userId") Long userId);
 
     boolean existsByUserUserId(Long userId);
+
+    Optional<UserLevel> findByUser(User user);
 }
