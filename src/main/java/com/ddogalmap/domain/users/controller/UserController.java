@@ -130,7 +130,6 @@ public class UserController {
 				regionVerificationService.getRegionVerification(user.userId())
 		);
 	}
-}
 
 	@Operation(
 			summary = "회원 탈퇴",

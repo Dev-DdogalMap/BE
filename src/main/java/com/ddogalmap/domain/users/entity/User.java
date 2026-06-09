@@ -80,6 +80,8 @@ public class User extends BaseEntity {
 
     public void updateChatEnabled(Boolean chatEnabled) {
         this.chatEnabled = chatEnabled;
+    }
+
     public void withdraw() {
         this.kakaoId = null;
         this.email = null;
