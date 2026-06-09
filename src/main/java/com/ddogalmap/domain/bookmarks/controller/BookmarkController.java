@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,22 +43,6 @@ public class BookmarkController {
     }
 
     @Operation(
-            summary = "내 전체 북마크 맛집 조회",
-            description = """
-                    로그인한 사용자가 저장한 전체 북마크 맛집 목록을 조회합니다.
-                    
-                    카테고리 구분 없이 모든 북마크 맛집을 최신 저장순으로 반환합니다.
-                    응답에는 북마크 ID, 식당 ID, 식당명, 카테고리, 주소, 대표 이미지, 메모, 저장일시가 포함됩니다.
-                    """
-    )
-    @GetMapping
-    public List<BookmarkRestaurantResponse> getMyBookmarks(
-            @AuthenticationPrincipal UserPrincipal userPrincipal
-    ) {
-        return bookmarkQueryService.getMyBookmarks(userPrincipal.userId());
-    }
-
-    @Operation(
             summary = "맛집의 폴더별 저장 상태 조회",
             description = """
                 로그인한 사용자의 즐겨찾기 폴더 목록을 조회하면서,
@@ -76,4 +61,24 @@ public class BookmarkController {
                 restaurantId
         );
     }
+
+    @Operation(
+            summary = "북마크 카테고리 내 맛집 목록 조회",
+            description = "로그인한 사용자가 생성한 특정 북마크 폴더에 저장한 맛집 목록을 조회합니다."
+    )
+    @GetMapping("/{bookmarkCategoryId}/restaurants")
+    public ResponseEntity<BookmarkCategoryRestaurantsResponse> getBookmarkCategoryRestaurants(
+            @PathVariable Long bookmarkCategoryId,
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
+
+        return ResponseEntity.ok(
+                bookmarkQueryService.getBookmarkCategoryRestaurants(
+                        user.userId(),
+                        bookmarkCategoryId
+                )
+        );
+    }
+
+
 }
