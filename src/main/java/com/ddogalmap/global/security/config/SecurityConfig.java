@@ -50,7 +50,9 @@ public class SecurityConfig {
                                 "/api/chats/ws-info",
                                 "/api/restaurants/map",
                                 "/api/restaurants/*/preview",
-                                "/api/restaurants/*/reviews"
+                                "/api/restaurants/*/reviews",
+                                "/api/regions/tree",
+                                "/api/taste-experts"
                         ).permitAll()
                         // 💡 마이페이지 관련 API는 인증된 유저만 접근 가능하도록 설정
                         .requestMatchers("/api/my/**").authenticated()
@@ -62,7 +64,7 @@ public class SecurityConfig {
                                 "/api/restaurants/search",
                                 "/api/food-types")
                         .permitAll()
-                        .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(

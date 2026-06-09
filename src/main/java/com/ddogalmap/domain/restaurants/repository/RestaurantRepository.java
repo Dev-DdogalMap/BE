@@ -60,15 +60,15 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                     ) AS INTEGER
                 )
             END AS distance,
-            ROUND(AVG(rv.score), 1) AS averageScore,
-            COUNT(rv.review_id) AS reviewCount
+            rs.average_score AS averageScore,
+            COALESCE(rs.review_count, 0) AS reviewCount,
+            rs.food_score AS foodScore
         FROM restaurants r
         JOIN food_types ft
             ON r.food_type_id = ft.food_type_id
-        LEFT JOIN reviews rv
-            ON rv.restaurant_id = r.restaurant_id
+        LEFT JOIN restaurant_stats rs
+            ON rs.restaurant_id = r.restaurant_id
         WHERE r.restaurant_id = :restaurantId
-        GROUP BY r.restaurant_id, r.place_name, ft.type, r.road_address_name, r.location
     """, nativeQuery = true)
     Optional<RestaurantPreviewProjection> findRestaurantPreview(
             @Param("restaurantId") Long restaurantId,
@@ -97,13 +97,24 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                     ) AS INTEGER
                 )
             END AS distance,
-            ROUND(AVG(rv.score), 1) AS averageScore,
-            COUNT(rv.review_id) AS reviewCount
+            rs.average_score AS averageScore,
+            COALESCE(rs.review_count, 0) AS reviewCount,
+            COALESCE(rs.resident_recommend_rate, 0) AS residentRecommendRate,
+            COALESCE(rs.revisit_rate, 0) AS revisitRate,
+            COALESCE(rs.visit_verify_count, 0) AS visitVerifyCount,
+            COALESCE(bs.bookmark_count, 0) AS bookmarkCount,
+            rs.food_score AS foodScore
         FROM restaurants r
         JOIN food_types ft
             ON r.food_type_id = ft.food_type_id
-        LEFT JOIN reviews rv
-            ON rv.restaurant_id = r.restaurant_id
+        LEFT JOIN restaurant_stats rs
+            ON rs.restaurant_id = r.restaurant_id
+        LEFT JOIN (
+            SELECT b.restaurant_id, COUNT(*) AS bookmark_count
+            FROM bookmarks b
+            WHERE b.restaurant_id = :restaurantId
+            GROUP BY b.restaurant_id
+        ) bs ON bs.restaurant_id = r.restaurant_id
         WHERE r.restaurant_id = :restaurantId
         GROUP BY
             r.restaurant_id,
@@ -155,88 +166,145 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
      * 맛집 검색 (페이지 단위).
      * - 필터: keyword, region, foodTypeId (각각 null 이면 무시)
      * - 정렬: distance(기본) / jjinScore / score
+     * - 점수/카운트는 사전 계산된 restaurant_stats 에서 가져옴 (실시간 집계 X)
+     */
+    /**
+     * 거리순 정렬 (location <-> point KNN 인덱스 활용 가능).
      */
     @Query(value = """
-        SELECT * FROM (
-            SELECT
-                r.restaurant_id AS restaurantId,
-                r.place_name AS placeName,
-                ft.type AS foodType,
-                r.address_name AS addressName,
-                r.road_address_name AS roadAddressName,
-                ST_Y(r.location::geometry) AS latitude,
-                ST_X(r.location::geometry) AS longitude,
-                CAST(
+        SELECT
+            r.restaurant_id AS restaurantId,
+            r.place_name AS placeName,
+            ft.type AS foodType,
+            r.address_name AS addressName,
+            r.road_address_name AS roadAddressName,
+            ST_Y(r.location::geometry) AS latitude,
+            ST_X(r.location::geometry) AS longitude,
+            CAST(
+                ST_Distance(
+                    r.location,
+                    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+                ) AS INTEGER
+            ) AS distance,
+            rs.average_score AS averageScore,
+            COALESCE(rs.review_count, 0) AS reviewCount,
+            CAST(COALESCE(rs.food_score, 0) AS INTEGER) AS jjinScore
+        FROM restaurants r
+        JOIN food_types ft
+            ON r.food_type_id = ft.food_type_id
+        LEFT JOIN restaurant_stats rs
+            ON rs.restaurant_id = r.restaurant_id
+        WHERE 1 = 1
+            AND (:keyword IS NULL OR r.place_name LIKE CONCAT('%', :keyword, '%'))
+            AND (:region IS NULL OR r.address_name LIKE CONCAT('%', :region, '%'))
+            AND (:foodTypeId IS NULL OR r.food_type_id = :foodTypeId)
+        ORDER BY
+            r.location <-> ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography ASC,
+            r.restaurant_id DESC
+        LIMIT :size OFFSET :offset
+    """, nativeQuery = true)
+    List<RestaurantSearchProjection> searchRestaurantsByDistance(
+            @Param("keyword") String keyword,
+            @Param("region") String region,
+            @Param("foodTypeId") Long foodTypeId,
+            @Param("lat") Double lat,
+            @Param("lng") Double lng,
+            @Param("size") int size,
+            @Param("offset") int offset
+    );
+
+    /**
+     * 맛집지수(jjinScore)순 정렬 (restaurant_stats.food_score 인덱스 활용).
+     */
+    @Query(value = """
+        SELECT
+            r.restaurant_id AS restaurantId,
+            r.place_name AS placeName,
+            ft.type AS foodType,
+            r.address_name AS addressName,
+            r.road_address_name AS roadAddressName,
+            ST_Y(r.location::geometry) AS latitude,
+            ST_X(r.location::geometry) AS longitude,
+            CASE
+                WHEN :lat IS NULL OR :lng IS NULL THEN NULL
+                ELSE CAST(
                     ST_Distance(
                         r.location,
                         ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
                     ) AS INTEGER
-                ) AS distance,
-                ROUND(AVG(rv.score), 1) AS averageScore,
-                COUNT(DISTINCT rv.review_id) AS reviewCount,
-                CAST(
-                    ROUND(
-                        (CASE
-                            WHEN COUNT(DISTINCT CASE WHEN r.address_name LIKE CONCAT('%', u.region, '%') THEN rv.review_id END) > 0
-                            THEN AVG(CASE WHEN r.address_name LIKE CONCAT('%', u.region, '%') THEN rv.score END) * 20
-                            ELSE 0
-                        END) * 0.4
-                        +
-                        0 * 0.3
-                        +
-                        (CASE
-                            WHEN COUNT(DISTINCT rv.review_id) > 0
-                            THEN AVG(rv.score) * 20
-                            ELSE 0
-                        END) * 0.2
-                        +
-                        (CASE
-                            WHEN COUNT(DISTINCT rv.user_id) > 0
-                            THEN COUNT(DISTINCT CASE WHEN b.user_id = rv.user_id THEN rv.user_id END) * 100.0 / COUNT(DISTINCT rv.user_id)
-                            ELSE 0
-                        END) * 0.1
-                    ) AS INTEGER
-                ) AS jjinScore,
-                COUNT(DISTINCT b.bookmark_id) AS bookmarkCount
-            FROM restaurants r
-            JOIN food_types ft
-                ON r.food_type_id = ft.food_type_id
-            LEFT JOIN reviews rv
-                ON rv.restaurant_id = r.restaurant_id
-            LEFT JOIN user_levels ul
-                ON ul.user_id = rv.user_id
-            LEFT JOIN bookmarks b
-                ON b.restaurant_id = r.restaurant_id
-            LEFT JOIN users u
-                ON u.user_id = rv.user_id
-            WHERE 1 = 1
-                AND (:keyword IS NULL OR r.place_name LIKE CONCAT('%', :keyword, '%'))
-                AND (:region IS NULL OR r.address_name LIKE CONCAT('%', :region, '%'))
-                AND (:foodTypeId IS NULL OR r.food_type_id = :foodTypeId)
-            GROUP BY
-                r.restaurant_id,
-                r.place_name,
-                ft.type,
-                r.address_name,
-                r.road_address_name,
-                r.location
-        ) sub
+                )
+            END AS distance,
+            rs.average_score AS averageScore,
+            COALESCE(rs.review_count, 0) AS reviewCount,
+            CAST(COALESCE(rs.food_score, 0) AS INTEGER) AS jjinScore
+        FROM restaurants r
+        JOIN food_types ft
+            ON r.food_type_id = ft.food_type_id
+        LEFT JOIN restaurant_stats rs
+            ON rs.restaurant_id = r.restaurant_id
+        WHERE 1 = 1
+            AND (:keyword IS NULL OR r.place_name LIKE CONCAT('%', :keyword, '%'))
+            AND (:region IS NULL OR r.address_name LIKE CONCAT('%', :region, '%'))
+            AND (:foodTypeId IS NULL OR r.food_type_id = :foodTypeId)
         ORDER BY
-            CASE WHEN :sort = 'distance'  THEN distance     END ASC,
-            CASE WHEN :sort = 'jjinScore' THEN jjinScore    END DESC,
-            CASE WHEN :sort = 'score'     THEN averageScore END DESC NULLS LAST,
-            CASE WHEN :sort = 'distance'  THEN jjinScore    END DESC,
-            CASE WHEN :sort <> 'distance' THEN distance     END ASC,
-            restaurantId DESC
+            rs.food_score DESC NULLS LAST,
+            r.restaurant_id DESC
         LIMIT :size OFFSET :offset
     """, nativeQuery = true)
-    List<RestaurantSearchProjection> searchRestaurants(
+    List<RestaurantSearchProjection> searchRestaurantsByJjinScore(
             @Param("keyword") String keyword,
             @Param("region") String region,
             @Param("foodTypeId") Long foodTypeId,
-            @Param("lat") double lat,
-            @Param("lng") double lng,
-            @Param("sort") String sort,
+            @Param("lat") Double lat,
+            @Param("lng") Double lng,
+            @Param("size") int size,
+            @Param("offset") int offset
+    );
+
+    /**
+     * 별점순 정렬 (restaurant_stats.average_score 인덱스 활용).
+     */
+    @Query(value = """
+        SELECT
+            r.restaurant_id AS restaurantId,
+            r.place_name AS placeName,
+            ft.type AS foodType,
+            r.address_name AS addressName,
+            r.road_address_name AS roadAddressName,
+            ST_Y(r.location::geometry) AS latitude,
+            ST_X(r.location::geometry) AS longitude,
+            CASE
+                WHEN :lat IS NULL OR :lng IS NULL THEN NULL
+                ELSE CAST(
+                    ST_Distance(
+                        r.location,
+                        ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
+                    ) AS INTEGER
+                )
+            END AS distance,
+            rs.average_score AS averageScore,
+            COALESCE(rs.review_count, 0) AS reviewCount,
+            CAST(COALESCE(rs.food_score, 0) AS INTEGER) AS jjinScore
+        FROM restaurants r
+        JOIN food_types ft
+            ON r.food_type_id = ft.food_type_id
+        LEFT JOIN restaurant_stats rs
+            ON rs.restaurant_id = r.restaurant_id
+        WHERE 1 = 1
+            AND (:keyword IS NULL OR r.place_name LIKE CONCAT('%', :keyword, '%'))
+            AND (:region IS NULL OR r.address_name LIKE CONCAT('%', :region, '%'))
+            AND (:foodTypeId IS NULL OR r.food_type_id = :foodTypeId)
+        ORDER BY
+            rs.average_score DESC NULLS LAST,
+            r.restaurant_id DESC
+        LIMIT :size OFFSET :offset
+    """, nativeQuery = true)
+    List<RestaurantSearchProjection> searchRestaurantsByScore(
+            @Param("keyword") String keyword,
+            @Param("region") String region,
+            @Param("foodTypeId") Long foodTypeId,
+            @Param("lat") Double lat,
+            @Param("lng") Double lng,
             @Param("size") int size,
             @Param("offset") int offset
     );

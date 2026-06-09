@@ -4,11 +4,16 @@ import java.time.LocalDateTime;
 
 public record DirectChatRoomResponse(
         Long directChatRoomId,
-        Long opponentUserId,
-        String opponentNickname,
-        String opponentProfileImageUrl,
+        Long targetUserId,
+        String targetNickname,
+        String targetProfileImageUrl,
+        Integer targetLevel,
+        String targetLevelName,
+        String targetSpecialty,
+        Boolean targetCertified,
         String lastMessage,
         LocalDateTime lastMessageAt,
+        Integer unreadCount,
         LocalDateTime createdAt
 ) {
 }

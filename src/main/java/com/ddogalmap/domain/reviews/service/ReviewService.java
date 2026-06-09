@@ -2,6 +2,9 @@ package com.ddogalmap.domain.reviews.service;
 
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository; // 💡 가게 리포지토리 임포트 추가
+import com.ddogalmap.domain.badges.dto.ReviewCreatedEvent;
+import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.reviews.dto.request.ReviewRequest;
 import com.ddogalmap.domain.reviews.dto.response.ReviewResponse;
 import com.ddogalmap.domain.reviews.entity.Review;
@@ -14,6 +17,7 @@ import com.ddogalmap.domain.visit.repository.VisitVerificationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,6 +37,7 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final VisitVerificationRepository visitVerificationRepository;
     private final RestaurantRepository restaurantRepository; // 💡 의존성 추가
+    private final ApplicationEventPublisher eventPublisher;
 
     // 리뷰 생성 로직 (기존과 동일)
     @Transactional
@@ -64,7 +69,10 @@ public class ReviewService {
             request.tags().forEach(review::addTag);
         }
 
-        if (images != null && !images.isEmpty()) {
+        boolean hasImage = images != null && !images.isEmpty();
+
+        // 이미지 저장
+        if (hasImage) {
             for (MultipartFile image : images) {
                 String storeFilename = fileService.saveFile(image);
                 String orgFilename = image.getOriginalFilename();
@@ -78,7 +86,17 @@ public class ReviewService {
             }
         }
 
-        return reviewRepository.save(review).getReviewId();
+        Review savedReview = reviewRepository.save(review);
+
+        // 경험치 이벤트 발행
+        ActivityType activityType = hasImage
+                ? ActivityType.REVIEW_PHOTO
+                : ActivityType.REVIEW_WRITE;
+
+        eventPublisher.publishEvent(new LevelExpEvent(userId, activityType, savedReview.getReviewId()));
+        eventPublisher.publishEvent(new ReviewCreatedEvent(userId, savedReview.getReviewId()));
+
+        return savedReview.getReviewId();
     }
 
     // 가게별 리뷰 조회

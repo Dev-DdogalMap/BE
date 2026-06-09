@@ -23,7 +23,6 @@ public record RestaurantSearchResponse(
             Double averageScore,
             Long reviewCount,
             Integer jjinScore,
-            Long bookmarkCount,
             List<String> tags
     ) {
     }

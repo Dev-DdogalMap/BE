@@ -4,6 +4,7 @@ import com.ddogalmap.domain.restaurants.dto.projection.RestaurantSearchProjectio
 import com.ddogalmap.domain.restaurants.dto.projection.RestaurantTagProjection;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantSearchResponse;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
+import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,19 +36,25 @@ public class RestaurantSearchService {
     private static final String DEFAULT_SORT = "distance";
 
     private final RestaurantRepository restaurantRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public RestaurantSearchResponse search(
+            Long currentUserId,
             String keyword,
             String region,
             Long foodTypeId,
-            double lat,
-            double lng,
+            Double lat,
+            Double lng,
             String sort,
             int page,
             int size
     ) {
         String normalizedSort = normalizeSort(sort);
+        // lat/lng 없으면 distance 정렬 불가 → jjinScore 로 자동 폴백
+        if ("distance".equals(normalizedSort) && (lat == null || lng == null)) {
+            normalizedSort = "jjinScore";
+        }
         int normalizedPage = page < 1 ? 1 : page;
         int normalizedSize = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
         int offset = (normalizedPage - 1) * normalizedSize;
@@ -55,20 +62,31 @@ public class RestaurantSearchService {
         String normalizedKeyword = blankToNull(keyword);
         String normalizedRegion = blankToNull(region);
 
+        // region 명시되지 않았고 로그인 사용자라면, 인증된 동네를 자동 적용
+        if (normalizedRegion == null && currentUserId != null) {
+            normalizedRegion = userRepository.findRegionByUserId(currentUserId)
+                    .map(this::blankToNull)
+                    .orElse(null);
+        }
+
         long totalCount = restaurantRepository.countSearchRestaurants(
                 normalizedKeyword, normalizedRegion, foodTypeId
         );
 
-        List<RestaurantSearchProjection> rows = restaurantRepository.searchRestaurants(
-                normalizedKeyword,
-                normalizedRegion,
-                foodTypeId,
-                lat,
-                lng,
-                normalizedSort,
-                normalizedSize,
-                offset
-        );
+        List<RestaurantSearchProjection> rows = switch (normalizedSort) {
+            case "distance" -> restaurantRepository.searchRestaurantsByDistance(
+                    normalizedKeyword, normalizedRegion, foodTypeId,
+                    lat, lng, normalizedSize, offset
+            );
+            case "score" -> restaurantRepository.searchRestaurantsByScore(
+                    normalizedKeyword, normalizedRegion, foodTypeId,
+                    lat, lng, normalizedSize, offset
+            );
+            default -> restaurantRepository.searchRestaurantsByJjinScore(
+                    normalizedKeyword, normalizedRegion, foodTypeId,
+                    lat, lng, normalizedSize, offset
+            );
+        };
 
         if (rows.isEmpty()) {
             return new RestaurantSearchResponse(
@@ -95,7 +113,6 @@ public class RestaurantSearchService {
                     row.getAverageScore(),
                     row.getReviewCount(),
                     row.getJjinScore(),
-                    row.getBookmarkCount(),
                     tags
             ));
         }

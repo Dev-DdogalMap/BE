@@ -2,10 +2,12 @@ package com.ddogalmap.domain.restaurants.controller;
 
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantSearchResponse;
 import com.ddogalmap.domain.restaurants.service.RestaurantSearchService;
+import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,7 +28,8 @@ public class RestaurantSearchController {
                     - keyword: 음식점 이름에 포함되는 텍스트
                     - region: 지번 주소에 포함되는 텍스트
                     - foodTypeId: 음식 종류 ID (food_types 테이블 참조)
-                    - lat, lng: 사용자 좌표 (거리 계산용, 필수)
+                    - lat, lng: 사용자 좌표 (거리 계산용, 선택)
+                      값이 없으면 distance 정렬 시 jjinScore 정렬로 자동 폴백
 
                     정렬 (sort):
                     - distance (기본): 거리 가까운 순 → 같으면 맛집 지수 높은 순
@@ -38,17 +41,19 @@ public class RestaurantSearchController {
     )
     @GetMapping("/search")
     public RestaurantSearchResponse search(
+            @AuthenticationPrincipal UserPrincipal principal,
             @Parameter(description = "검색어 (음식점 이름)") @RequestParam(required = false) String keyword,
-            @Parameter(description = "지역 (지번 주소 매칭)") @RequestParam(required = false) String region,
+            @Parameter(description = "지역 (지번 주소 매칭). 비어있고 로그인 상태면 사용자 인증 동네 자동 적용") @RequestParam(required = false) String region,
             @Parameter(description = "음식 종류 ID") @RequestParam(required = false) Long foodTypeId,
-            @Parameter(description = "사용자 위도") @RequestParam double lat,
-            @Parameter(description = "사용자 경도") @RequestParam double lng,
+            @Parameter(description = "사용자 위도 (선택)") @RequestParam(required = false) Double lat,
+            @Parameter(description = "사용자 경도 (선택)") @RequestParam(required = false) Double lng,
             @Parameter(description = "정렬: distance / jjinScore / score") @RequestParam(defaultValue = "distance") String sort,
             @Parameter(description = "페이지 (1부터)") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "페이지 크기") @RequestParam(defaultValue = "20") int size
     ) {
+        Long currentUserId = (principal != null) ? principal.userId() : null;
         return restaurantSearchService.search(
-                keyword, region, foodTypeId, lat, lng, sort, page, size
+                currentUserId, keyword, region, foodTypeId, lat, lng, sort, page, size
         );
     }
 }

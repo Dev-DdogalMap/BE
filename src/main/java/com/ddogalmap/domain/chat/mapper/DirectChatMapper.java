@@ -5,6 +5,7 @@ import com.ddogalmap.domain.chat.dto.response.DirectChatRoomResponse;
 import com.ddogalmap.domain.chat.entity.ChatMessages;
 import com.ddogalmap.domain.chat.entity.DirectChatRoom;
 import com.ddogalmap.domain.users.entity.User;
+import com.ddogalmap.domain.users.enumtype.UserStatus;
 
 import java.time.LocalDateTime;
 
@@ -17,16 +18,27 @@ public final class DirectChatMapper {
             DirectChatRoom room,
             Long currentUserId,
             String lastMessage,
-            LocalDateTime lastMessageAt
+            LocalDateTime lastMessageAt,
+            Integer targetLevel,
+            String targetLevelName,
+            String targetSpecialty,
+            Boolean targetCertified
     ) {
         User opponent = room.getOpponent(currentUserId);
+        boolean opponentUnavailable = room.hasOpponentLeft(currentUserId)
+                || opponent.getStatus() == UserStatus.DELETED;
         return new DirectChatRoomResponse(
                 room.getDirectChatRoomId(),
                 opponent.getUserId(),
-                opponent.getNickname(),
-                opponent.getProfileImageUrl(),
+                opponentUnavailable ? "대화 상대 없음" : opponent.getNickname(),
+                opponentUnavailable ? null : opponent.getProfileImageUrl(),
+                opponentUnavailable ? null : targetLevel,
+                opponentUnavailable ? null : targetLevelName,
+                opponentUnavailable ? null : targetSpecialty,
+                opponentUnavailable ? false : targetCertified,
                 lastMessage,
                 lastMessageAt,
+                0,
                 room.getCreatedAt()
         );
     }
@@ -37,7 +49,6 @@ public final class DirectChatMapper {
                 message.getDirectChatRoom().getDirectChatRoomId(),
                 message.getWriter().getUserId(),
                 message.getWriter().getNickname(),
-                //message.getMessageType(),
                 message.getStatus(),
                 message.getMessage(),
                 message.getCreatedAt()

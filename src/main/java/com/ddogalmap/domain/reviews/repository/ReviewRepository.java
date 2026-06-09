@@ -1,5 +1,6 @@
 package com.ddogalmap.domain.reviews.repository;
 
+import com.ddogalmap.domain.reviews.dto.projection.FoodTypeReviewCountProjection;
 import com.ddogalmap.domain.reviews.entity.Review;
 import com.ddogalmap.domain.visit.entity.VisitVerification;
 import org.springframework.data.domain.Page;
@@ -50,4 +51,53 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     List<String> findTop3TagsByRestaurantId(
             @Param("restaurantId") Long restaurantId
     );
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+    """)
+    int countByUserId(@Param("userId") Long userId);
+
+    @Query("""
+        select count(r)
+        from Review r
+        where r.user.userId = :userId
+          and r.restaurant.foodType.foodTypeId in (
+              select bft.foodType.foodTypeId
+              from BadgeFoodType bft
+              where bft.badge.badgeId = :badgeId
+          )
+    """)
+    int countByUserIdAndBadgeFoodTypes(
+            @Param("userId") Long userId,
+            @Param("badgeId") Long badgeId
+    );
+
+    @Query("""
+        select
+            r.restaurant.foodType.foodTypeId as foodTypeId,
+            count(r) as reviewCount
+        from Review r
+        where r.user.userId = :userId
+        group by r.restaurant.foodType.foodTypeId
+    """)
+    List<FoodTypeReviewCountProjection> countReviewsGroupByFoodType(
+            @Param("userId") Long userId
+    );
+
+    @Query(value = """
+        SELECT CONCAT(ft.type, ' 전문')
+        FROM reviews r
+        JOIN restaurants rt
+            ON rt.restaurant_id = r.restaurant_id
+        JOIN food_types ft
+            ON ft.food_type_id = rt.food_type_id
+        WHERE r.user_id = :userId
+        GROUP BY ft.type
+        ORDER BY COUNT(*) DESC,
+                 MAX(r.created_at) DESC
+        LIMIT 1
+    """, nativeQuery = true)
+    Optional<String> findTopSpecialtyByUserId(@Param("userId") Long userId);
 }

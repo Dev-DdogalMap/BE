@@ -79,6 +79,7 @@ public class VisitVerificationController {
                     description = "음식점을 찾을 수 없음"
             )
     })
+
     @PostMapping("/visit-verification")
     public ResponseEntity<VisitVerificationResponse> verifyVisit(
             @Parameter(hidden = true)

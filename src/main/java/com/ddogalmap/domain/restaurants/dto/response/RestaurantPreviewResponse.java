@@ -13,14 +13,13 @@ public record RestaurantPreviewResponse(
         Double averageScore,
         Long reviewCount,
         List<String> topTags,
-        Double foodScore
+        Double foodScore                 // 전체 맛집지수 (0~100, 소수 첫째자리)
 ) {
 
     public static RestaurantPreviewResponse from(
             RestaurantPreviewProjection projection,
             String imageUrl,
-            List<String> topTags,
-            Double foodScore
+            List<String> topTags
     ) {
         return new RestaurantPreviewResponse(
                 projection.getRestaurantId(),
@@ -32,7 +31,7 @@ public record RestaurantPreviewResponse(
                 projection.getAverageScore(),
                 projection.getReviewCount(),
                 topTags,
-                foodScore
+                projection.getFoodScore()
         );
     }
 }
