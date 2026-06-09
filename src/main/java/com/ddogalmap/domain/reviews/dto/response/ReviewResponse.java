@@ -12,6 +12,7 @@ public record ReviewResponse(
     LocalDateTime createdAt,
     List<String> imageUrls,
     List<String> tags,
-    int likeCount
+    int likeCount,
+    String restaurantName
 )   {
 }
