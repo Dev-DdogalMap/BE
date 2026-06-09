@@ -58,4 +58,16 @@ public interface ChatRoomMembersRepository extends JpaRepository<ChatRoomMembers
       and crm.role = com.ddogalmap.domain.chat.enumtype.ChatRoomMemberRole.OWNER
 """)
     List<ChatRoomMembers> findOwnersForUpdate(Long roomId);
+
+    Optional<ChatRoomMembers> findByChatRoom_idAndUser_UserId(Long roomId, Long userId);
+
+    void deleteAllByChatRoom_idAndUser_UserIdIn(Long roomId, List<Long> userIds);
+
+    @Query("""
+        select crm
+        from ChatRoomMembers crm
+        where crm.chatRoom.id = :roomId
+        and crm.user.userId in :userIds
+""")
+    List<ChatRoomMembers> findGrantedMember(Long roomId, List<Long> userIds);
 }

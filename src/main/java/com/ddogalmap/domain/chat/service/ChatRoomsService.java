@@ -1,5 +1,7 @@
 package com.ddogalmap.domain.chat.service;
 
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomGrantRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomKickRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
@@ -217,13 +219,15 @@ public class ChatRoomsService {
      */
     @Transactional(readOnly = true)
     public ChatRoomMembersResponse getChatRoomMembers(Long userId, Long roomId) {
-        //해당 방 멤버인지 검증
-        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserId(roomId, userId)) {
-            throw new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다.");
-        }
+        // 해당 방 멤버인지 검증
+        ChatRoomMembers currentMember = chatRoomMembersRepository
+                .findByChatRoom_idAndUser_UserId(roomId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 그룹 채팅방의 참여 멤버가 아닙니다."));
+
         ChatRooms room = chatRoomsRepository.findById(roomId).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 그룹 채팅방입니다."));
         List<MemberDetailInfo> members = chatRoomMembersRepository.findAllMembersByChatRoom(room);
         return new ChatRoomMembersResponse(
+                currentMember.getRole(),
                 room.getParticipantCount(),
                 room.getMaxParticipantCount(),
                 members
@@ -249,6 +253,35 @@ public class ChatRoomsService {
         chatRoomMembersRepository.deleteById(roomMember.getId());
         chatRoomsRepository.decreaseParticipantCount(roomId);  //현재 인원 원자적 업데이트
         return new LeaveChatRoomResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 강퇴(OWNER권한 필요)
+     */
+    @Transactional
+    public ChatRoomKickResponse kick(Long userId, Long roomId, ChatRoomKickRequest request) {
+        // 해당 방의 OWNER인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserIdAndRole(roomId, userId, ChatRoomMemberRole.OWNER)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 OWNER가 아닙니다.");
+        }
+
+        chatRoomMembersRepository.deleteAllByChatRoom_idAndUser_UserIdIn(roomId, request.kickedUserIds());
+        chatRoomsRepository.reduceCountOnKick(roomId, request.kickedUserIds().size());  //인원수 차감
+        return new ChatRoomKickResponse(roomId);
+    }
+
+    /**
+     * 그룹 채팅방 OWNER 권한 부여
+     */
+    @Transactional
+    public ChatRoomGrantResponse grant(Long userId, Long roomId, ChatRoomGrantRequest request) {
+        // 해당 방의 OWNER인지 검증
+        if (!chatRoomMembersRepository.existsByChatRoom_idAndUser_UserIdAndRole(roomId, userId, ChatRoomMemberRole.OWNER)) {
+            throw new IllegalArgumentException("해당 그룹 채팅방의 OWNER가 아닙니다.");
+        }
+        List<ChatRoomMembers> members = chatRoomMembersRepository.findGrantedMember(roomId, request.grantedUserIds());
+        members.forEach(ChatRoomMembers::grantOwner);  //권한부여
+        return new ChatRoomGrantResponse(roomId);
     }
 
     //채팅방 조회

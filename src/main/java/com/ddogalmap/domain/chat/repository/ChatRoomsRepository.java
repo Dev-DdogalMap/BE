@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -64,4 +65,8 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
     @Modifying
     @Query("UPDATE ChatRooms c SET c.participantCount = c.participantCount - 1 WHERE c.id = :roomId")
     void decreaseParticipantCount(@Param("roomId") Long roomId);
+
+    @Modifying
+    @Query("UPDATE ChatRooms c SET c.participantCount = c.participantCount - :count WHERE c.id = :roomId")
+    void reduceCountOnKick(@Param("roomId") Long roomId, @Param("count") Integer count);
 }

@@ -38,4 +38,8 @@ public class ChatRoomMembers extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private ChatRoomMemberRole role;
+
+    public void grantOwner() {
+        this.role = ChatRoomMemberRole.OWNER;
+    }
 }

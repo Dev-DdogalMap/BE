@@ -1,6 +1,8 @@
 package com.ddogalmap.domain.chat.controller;
 
 import com.ddogalmap.domain.chat.dto.groupChat.image.UrlDto;
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomGrantRequest;
+import com.ddogalmap.domain.chat.dto.groupChat.request.ChatRoomKickRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.CreateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.request.UpdateChatRoomRequest;
 import com.ddogalmap.domain.chat.dto.groupChat.response.*;
@@ -162,5 +164,33 @@ public class ChatRoomsController {
             @AuthenticationPrincipal UserPrincipal principal, //방 참여자 여부 검증 필요
             @PathVariable Long roomId) {
         return chatRoomsService.leaveChatRoom(principal.userId(), roomId);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 강제 퇴장",
+            description = "그룹 채팅방의 OWNER가 강제 퇴장시킬 수 있습니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @DeleteMapping("/{roomId}/kick")
+    public ChatRoomKickResponse kick(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestBody ChatRoomKickRequest request
+    ) {
+        return chatRoomsService.kick(principal.userId(), roomId, request);
+    }
+
+    @Operation(
+            summary = "그룹 채팅방 OWNER권한 부여",
+            description = "그룹 채팅방의 OWNER가 MEMBER에게 OWNER권한을 부여합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PatchMapping("/{roomId}/grant")
+    public ChatRoomGrantResponse grant(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long roomId,
+            @RequestBody ChatRoomGrantRequest request
+    ) {
+        return chatRoomsService.grant(principal.userId(), roomId, request);
     }
 }
