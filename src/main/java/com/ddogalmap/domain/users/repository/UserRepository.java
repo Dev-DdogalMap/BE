@@ -12,6 +12,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByKakaoId(Long kakaoId);
 
+    /**
+     * 사용자의 인증된 동네(region) 만 가벼운 쿼리로 조회.
+     * 인증 안 했거나 region 비어있으면 빈 Optional.
+     */
+    @Query("SELECT u.region FROM User u WHERE u.userId = :userId")
+    Optional<String> findRegionByUserId(@Param("userId") Long userId);
+
     @Query("""
         select u
         from User u

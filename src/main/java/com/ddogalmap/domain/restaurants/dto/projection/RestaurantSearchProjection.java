@@ -15,5 +15,4 @@ public interface RestaurantSearchProjection {
     Double getAverageScore();
     Long getReviewCount();
     Integer getJjinScore();
-    Long getBookmarkCount();
 }
