@@ -149,7 +149,8 @@ public class ReviewService {
                             .toList(),
                     review.getTags().stream()
                             .map(tag -> tag.getContent())
-                            .toList()
+                            .toList(),
+                    review.getLikes().size()
             );
         });
     }
@@ -180,7 +181,8 @@ public class ReviewService {
                         .toList(),
                 review.getTags().stream()
                         .map(tag -> tag.getContent())
-                        .toList()
+                        .toList(),
+                review.getLikes().size()
         ));
     }
 }

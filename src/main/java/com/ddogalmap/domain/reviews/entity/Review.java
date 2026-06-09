@@ -68,6 +68,9 @@ public class Review extends BaseEntity{
         this.images.add(image);
     }
 
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
+
     @Builder
     public Review(Integer score, String content, boolean isRevisit, Long userId, Long restaurantId) {
         this.score = score;
