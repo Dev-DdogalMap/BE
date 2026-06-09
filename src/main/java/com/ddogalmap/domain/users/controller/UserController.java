@@ -2,14 +2,17 @@ package com.ddogalmap.domain.users.controller;
 
 import com.ddogalmap.domain.badges.dto.response.BadgeResponse;
 import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
+import com.ddogalmap.domain.users.dto.request.ChatPreferenceUpdateRequest;
+import com.ddogalmap.domain.users.dto.response.ChatPreferenceResponse;
+import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
+import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
 import com.ddogalmap.domain.users.dto.request.RepresentativeBadgeUpdateRequest;
 import com.ddogalmap.domain.users.dto.response.ActivityDetailResponse;
 import com.ddogalmap.domain.users.dto.response.ActivityResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationResponse;
-import com.ddogalmap.domain.users.dto.response.RegionVerificationStatusResponse;
 import com.ddogalmap.domain.users.service.RegionVerificationService;
 import com.ddogalmap.domain.users.service.UserWithdrawalService;
 import com.ddogalmap.domain.users.service.UserActivityService;
+import com.ddogalmap.domain.users.service.UserPreferenceService;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -36,6 +39,7 @@ import java.util.Map;
 public class UserController {
 
 	private final RegionVerificationService regionVerificationService;
+	private final UserPreferenceService userPreferenceService;
 	private final UserWithdrawalService userWithdrawalService;
 	private final UserActivityService userActivityService;
 
@@ -57,6 +61,37 @@ public class UserController {
 		return Map.of(
 				"userId", principal.userId()
 		);
+	}
+
+	@Operation(
+			summary = "내 채팅 수신 설정 조회",
+			description = "현재 로그인한 사용자의 1:1 채팅 수신 허용 여부를 조회합니다.",
+			security = @SecurityRequirement(name = "bearerAuth")
+	)
+	@GetMapping("/me/chat-preference")
+	public ChatPreferenceResponse getChatPreference(@AuthenticationPrincipal UserPrincipal principal) {
+		if (principal == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+		}
+
+		return userPreferenceService.getChatPreference(principal.userId());
+	}
+
+	@Operation(
+			summary = "내 채팅 수신 설정 변경",
+			description = "현재 로그인한 사용자의 1:1 채팅 수신 허용 여부를 변경합니다.",
+			security = @SecurityRequirement(name = "bearerAuth")
+	)
+	@PatchMapping("/me/chat-preference")
+	public ChatPreferenceResponse updateChatPreference(
+			@AuthenticationPrincipal UserPrincipal principal,
+			@RequestBody ChatPreferenceUpdateRequest request
+	) {
+		if (principal == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+		}
+
+		return userPreferenceService.updateChatPreference(principal.userId(), request);
 	}
 
 	@Operation(
@@ -95,6 +130,7 @@ public class UserController {
 				regionVerificationService.getRegionVerification(user.userId())
 		);
 	}
+}
 
 	@Operation(
 			summary = "회원 탈퇴",

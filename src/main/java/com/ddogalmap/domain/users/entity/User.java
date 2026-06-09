@@ -42,6 +42,9 @@ public class User extends BaseEntity {
 
     private LocalDateTime regionVerifiedAt;
 
+    @Column(name = "is_chat_enabled", nullable = false)
+    private Boolean chatEnabled = true;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -75,6 +78,8 @@ public class User extends BaseEntity {
         this.regionVerifiedAt = regionVerifiedAt;
     }
 
+    public void updateChatEnabled(Boolean chatEnabled) {
+        this.chatEnabled = chatEnabled;
     public void withdraw() {
         this.kakaoId = null;
         this.email = null;
