@@ -11,8 +11,6 @@ public record ReviewResponse(
     boolean isRevisit,
     LocalDateTime createdAt,
     List<String> imageUrls,
-    List<String> tags,
-    int likeCount,
-    String restaurantName
+    List<String> tags
 )   {
 }
