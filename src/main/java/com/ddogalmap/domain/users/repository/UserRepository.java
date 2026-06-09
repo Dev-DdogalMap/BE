@@ -28,22 +28,40 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdWithRepresentativeBadge(@Param("userId") Long userId);
 
     @Query(value = """
-        SELECT
-            (SELECT COUNT(*)
-             FROM visit_verifications v
-             WHERE v.user_id = :userId) AS visitCount,
+    SELECT
+        (SELECT COUNT(*)
+         FROM visit_verifications v
+         WHERE v.user_id = :userId) AS visitCount,
 
-            (SELECT COUNT(*)
-             FROM reviews r
-             WHERE r.user_id = :userId) AS reviewCount,
+        (SELECT COUNT(*)
+         FROM reviews r
+         WHERE r.user_id = :userId) AS reviewCount,
 
-            (SELECT COUNT(*)
-             FROM bookmarks b
-             WHERE b.user_id = :userId) AS bookmarkCount,
+        (SELECT COUNT(*)
+         FROM bookmarks b
+         WHERE b.user_id = :userId) AS bookmarkCount,
 
-            (SELECT COUNT(*)
-             FROM chat_room_members c
-             WHERE c.user_id = :userId) AS chatRoomCount
-        """, nativeQuery = true)
-    UserStatsProjection getUserStats(Long userId);
+        (
+            (
+                SELECT COUNT(*)
+                FROM direct_chat_rooms dcr
+                WHERE dcr.deleted_at IS NULL
+                  AND (
+                       (dcr.requester_id = :userId
+                        AND dcr.requester_left_at IS NULL)
+
+                    OR (dcr.receiver_id = :userId
+                        AND dcr.receiver_left_at IS NULL)
+                  )
+            )
+            +
+            (
+                SELECT COUNT(*)
+                FROM chat_room_members crm
+                WHERE crm.user_id = :userId
+            )
+        ) AS chatRoomCount
+    """, nativeQuery = true)
+    UserStatsProjection getUserStats(@Param("userId") Long userId
+    );
 }
