@@ -31,7 +31,8 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("keyword", likeKeyword(condition.keyword()))
                 .addValue("region", emptyToNull(condition.region()))
-                .addValue("minLevel", condition.minLevel());
+                .addValue("minLevel", condition.minLevel())
+                .addValue("excludedUserId", condition.excludedUserId());
 
         String baseFromWhere = """
                 from %1$s.users u
@@ -45,11 +46,13 @@ public class TasteExpertQueryRepositoryImpl implements TasteExpertQueryRepositor
 	                        cast(:keyword as text) is null
 	                        or u.nickname ilike cast(:keyword as text)
 	                        or u.region ilike cast(:keyword as text)
-	                    )
-	                    and u.is_chat_enabled = true
-	                    and (cast(:region as text) is null or u.region = cast(:region as text))
-	                    and (cast(:minLevel as integer) is null or l.level >= cast(:minLevel as integer))
-	                """.formatted(schema);
+		                    )
+		                    and u.is_chat_enabled = true
+		                    and u.status = 'ACTIVE'
+		                    and (cast(:excludedUserId as bigint) is null or u.user_id <> cast(:excludedUserId as bigint))
+		                    and (cast(:region as text) is null or u.region = cast(:region as text))
+		                    and (cast(:minLevel as integer) is null or l.level >= cast(:minLevel as integer))
+		                """.formatted(schema);
 
         String select = """
                 select

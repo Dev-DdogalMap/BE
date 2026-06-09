@@ -17,7 +17,11 @@ public final class DirectChatMapper {
             DirectChatRoom room,
             Long currentUserId,
             String lastMessage,
-            LocalDateTime lastMessageAt
+            LocalDateTime lastMessageAt,
+            Integer targetLevel,
+            String targetLevelName,
+            String targetSpecialty,
+            Boolean targetCertified
     ) {
         User opponent = room.getOpponent(currentUserId);
         boolean opponentLeft = room.hasOpponentLeft(currentUserId);
@@ -26,6 +30,10 @@ public final class DirectChatMapper {
                 opponent.getUserId(),
                 opponentLeft ? "대화 상대 없음" : opponent.getNickname(),
                 opponentLeft ? null : opponent.getProfileImageUrl(),
+                opponentLeft ? null : targetLevel,
+                opponentLeft ? null : targetLevelName,
+                opponentLeft ? null : targetSpecialty,
+                opponentLeft ? false : targetCertified,
                 lastMessage,
                 lastMessageAt,
                 0,

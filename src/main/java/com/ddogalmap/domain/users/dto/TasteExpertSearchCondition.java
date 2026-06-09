@@ -6,6 +6,7 @@ public record TasteExpertSearchCondition(
         String keyword,
         String region,
         Integer minLevel,
+        Long excludedUserId,
         TasteExpertSortType sort,
         int page,
         int size

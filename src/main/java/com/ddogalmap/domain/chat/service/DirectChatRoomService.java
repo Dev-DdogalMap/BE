@@ -19,10 +19,14 @@ import com.ddogalmap.domain.chat.repository.ChatMessageRepository;
 import com.ddogalmap.domain.chat.repository.ChatRoomsRepository;
 import com.ddogalmap.domain.chat.repository.DirectChatRoomRepository;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
+import com.ddogalmap.domain.levels.entity.UserLevel;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
+import com.ddogalmap.domain.levels.repository.UserLevelRepository;
+import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.exception.UserNotFoundException;
 import com.ddogalmap.domain.users.repository.UserRepository;
+import com.ddogalmap.domain.visit.repository.VisitVerificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +49,9 @@ public class DirectChatRoomService {
     private final ChatRoomsRepository chatRoomsRepository;
     private final ImageUtilService imageUtilService;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserLevelRepository userLevelRepository;
+    private final ReviewRepository reviewRepository;
+    private final VisitVerificationRepository visitVerificationRepository;
 
     @Transactional
     public DirectChatRoomResponse createOrGetDirectChatRoom(Long requesterId, CreateDirectChatRoomRequest request) {
@@ -73,12 +80,17 @@ public class DirectChatRoomService {
         ChatMessages latestMessage = directChatMessageRepository
                 .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                 .orElse(null);
+        DirectChatOpponentProfile opponentProfile = getOpponentProfile(room, requesterId);
 
         return DirectChatMapper.toRoomResponse(
                 room,
                 requesterId,
                 latestMessage == null ? null : latestMessage.getMessage(),
-                latestMessage == null ? null : latestMessage.getCreatedAt()
+                latestMessage == null ? null : latestMessage.getCreatedAt(),
+                opponentProfile.level(),
+                opponentProfile.levelName(),
+                opponentProfile.specialty(),
+                opponentProfile.certified()
         );
     }
 
@@ -154,12 +166,17 @@ public class DirectChatRoomService {
         ChatMessages latestMessage = directChatMessageRepository
                 .findTopByDirectChatRoom_DirectChatRoomIdOrderByCreatedAtDescChatMessageIdDesc(room.getDirectChatRoomId())
                 .orElse(null);
+        DirectChatOpponentProfile opponentProfile = getOpponentProfile(room, currentUserId);
 
         return DirectChatMapper.toRoomResponse(
                 room,
                 currentUserId,
                 latestMessage == null ? null : latestMessage.getMessage(),
-                latestMessage == null ? null : latestMessage.getCreatedAt()
+                latestMessage == null ? null : latestMessage.getCreatedAt(),
+                opponentProfile.level(),
+                opponentProfile.levelName(),
+                opponentProfile.specialty(),
+                opponentProfile.certified()
         );
     }
 
@@ -193,5 +210,27 @@ public class DirectChatRoomService {
     private User getUser(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자가 존재하지 않습니다. id=" + userId));
+    }
+
+    private DirectChatOpponentProfile getOpponentProfile(DirectChatRoom room, Long currentUserId) {
+        Long opponentId = room.getOpponent(currentUserId).getUserId();
+
+        UserLevel userLevel = userLevelRepository.findByUserIdWithLevel(opponentId)
+                .orElse(null);
+        Integer level = userLevel == null ? null : userLevel.getLevel().getLevel();
+        String levelName = userLevel == null ? null : userLevel.getLevel().getName();
+        String specialty = reviewRepository.findTopSpecialtyByUserId(opponentId)
+                .orElse("전문 분야 준비중");
+        boolean certified = visitVerificationRepository.countByUserUserId(opponentId) > 0;
+
+        return new DirectChatOpponentProfile(level, levelName, specialty, certified);
+    }
+
+    private record DirectChatOpponentProfile(
+            Integer level,
+            String levelName,
+            String specialty,
+            Boolean certified
+    ) {
     }
 }

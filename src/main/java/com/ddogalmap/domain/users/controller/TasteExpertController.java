@@ -2,10 +2,12 @@ package com.ddogalmap.domain.users.controller;
 
 import com.ddogalmap.domain.users.dto.response.TasteExpertPageResponse;
 import com.ddogalmap.domain.users.service.TasteExpertService;
+import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,8 +33,10 @@ public class TasteExpertController {
             @RequestParam(required = false) Integer minLevel,
             @RequestParam(required = false, defaultValue = "EXPERTISE") String sort,
             @RequestParam(required = false, defaultValue = "0") Integer page,
-            @RequestParam(required = false, defaultValue = "20") Integer size
+            @RequestParam(required = false, defaultValue = "20") Integer size,
+            @AuthenticationPrincipal UserPrincipal principal
     ) {
-        return tasteExpertService.getTasteExperts(keyword, region, minLevel, sort, page, size);
+        Long currentUserId = principal == null ? null : principal.userId();
+        return tasteExpertService.getTasteExperts(keyword, region, minLevel, sort, page, size, currentUserId);
     }
 }

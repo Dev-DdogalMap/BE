@@ -21,7 +21,8 @@ public class TasteExpertService {
             Integer minLevel,
             String sort,
             Integer page,
-            Integer size
+            Integer size,
+            Long currentUserId
     ) {
         int safePage = page == null ? 0 : page;
         int safeSize = size == null ? 20 : size;
@@ -38,6 +39,7 @@ public class TasteExpertService {
                 keyword,
                 region,
                 minLevel,
+                currentUserId,
                 sortType,
                 safePage,
                 safeSize
