@@ -118,6 +118,23 @@ public class BadgeGrantServiceImpl implements BadgeGrantService {
     }
 
     /**
+     * 신규 유저 배지 검사
+     */
+    @Override
+    public void grantNewUserBadge(Long userId) {
+        Set<Long> ownedBadgeIds = getOwnedBadgeIds(userId);
+
+        badgeRepository.findByConditionType(BadgeConditionType.NEW_USER)
+                .stream()
+                .findFirst()
+                .ifPresent(badge -> {
+                    if (!ownedBadgeIds.contains(badge.getBadgeId())) {
+                        grantBadge(userId, badge, ownedBadgeIds);
+                    }
+                });
+    }
+
+    /**
      * 음식 카테고리 리뷰 뱃지 지급
      */
     private void grantFoodTypeReviewBadges(
@@ -208,6 +225,10 @@ public class BadgeGrantServiceImpl implements BadgeGrantService {
         try {
             userBadgeRepository.saveAndFlush(userBadge);
             ownedBadgeIds.add(badge.getBadgeId());
+
+            if (user.getRepresentativeBadge() == null) {
+                user.updateRepresentativeBadge(badge);
+            }
 
             log.info(
                     "[Badge] 배지 획득. userId={}, badgeId={}, badgeName={}",
