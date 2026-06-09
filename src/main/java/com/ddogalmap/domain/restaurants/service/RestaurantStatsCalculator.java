@@ -5,14 +5,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 /**
  * 식당 통계 계산 + restaurant_stats 테이블에 UPSERT.
  * - 대량 처리 대비해 청크 단위로 SQL 실행
- * - 한 청크는 한 트랜잭션에서 단일 INSERT ... ON CONFLICT 로 처리
+ * - 각 청크는 {@link RestaurantStatsChunkExecutor} 가 별도 트랜잭션(REQUIRES_NEW)에서 처리
+ *   → 한 청크 실패해도 다른 청크 영향 없음, long transaction 회피
  */
 @Slf4j
 @Service
@@ -23,12 +23,13 @@ public class RestaurantStatsCalculator {
     private static final int CHUNK_SIZE = 1000;
 
     private final RestaurantStatsRepository statsRepository;
+    private final RestaurantStatsChunkExecutor chunkExecutor;
 
     /**
      * 주어진 식당 ID들의 통계를 재계산하여 UPSERT.
+     * - 청크별로 별도 트랜잭션에서 처리 → 부분 실패 허용
      * @return 처리된 식당 수
      */
-    @Transactional
     public int recalculate(List<Long> restaurantIds) {
         if (restaurantIds == null || restaurantIds.isEmpty()) {
             return 0;
@@ -38,19 +39,23 @@ public class RestaurantStatsCalculator {
         for (int from = 0; from < restaurantIds.size(); from += CHUNK_SIZE) {
             int to = Math.min(from + CHUNK_SIZE, restaurantIds.size());
             List<Long> chunk = restaurantIds.subList(from, to);
-            int affected = statsRepository.upsertStatsForRestaurantIds(chunk);
-            total += affected;
-            log.info("[RestaurantStatsCalculator] chunk {} ~ {} 처리, affected={}",
-                    from, to, affected);
+            try {
+                int affected = chunkExecutor.upsertChunk(chunk);
+                total += affected;
+                log.info("[RestaurantStatsCalculator] chunk {} ~ {} 처리, affected={}",
+                        from, to, affected);
+            } catch (Exception e) {
+                log.error("[RestaurantStatsCalculator] chunk {} ~ {} 실패 (다음 청크 계속 진행)",
+                        from, to, e);
+            }
         }
         return total;
     }
 
     /**
      * 전체 식당 통계 재계산 (최초 1회 또는 강제 갱신용).
-     * 동기 호출. 청크 단위로 처리하지만 모든 청크를 한 트랜잭션에서 처리.
+     * 동기 호출. 청크별 별도 트랜잭션.
      */
-    @Transactional
     public int recalculateAll() {
         List<Long> allIds = statsRepository.findAllRestaurantIds();
         log.info("[RestaurantStatsCalculator] 전체 재계산 시작 - 대상 식당 {} 개", allIds.size());
