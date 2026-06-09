@@ -116,20 +116,12 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             GROUP BY b.restaurant_id
         ) bs ON bs.restaurant_id = r.restaurant_id
         WHERE r.restaurant_id = :restaurantId
-        GROUP BY
-            r.restaurant_id,
-            r.place_name,
-            ft.type,
-            r.road_address_name,
-            r.phone,
-            r.place_url,
-            r.location
     """, nativeQuery = true)
     Optional<RestaurantInfoProjection> findRestaurantInfo(
-            @Param("restaurantId") Long restaurantId,
-            @Param("lat") Double lat,
-            @Param("lng") Double lng
-    );
+                @Param("restaurantId") Long restaurantId,
+                @Param("lat") Double lat,
+                @Param("lng") Double lng
+        );
 
     @Query(value = """
         SELECT

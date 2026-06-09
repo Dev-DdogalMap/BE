@@ -6,31 +6,30 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "likes", uniqueConstraints = {
-        @UniqueConstraint(name = "unique_user_review", columnNames = {"user_id", "review_id"})
-})
+@Table(
+        name = "likes",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_user_review", columnNames = {"review_id", "user_id"})
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class Like {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long likeId;
+    @Column(name = "like_id")
+    private Integer likeId;
+
+    @Column(name = "review_id", nullable = false)
+    private Long reviewId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "review_id", nullable = false)
-    private Review review;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-
-    @Builder
-    public Like(Long userId, Review review) {
-        this.userId = userId;
-        this.review = review;
-    }
 }
