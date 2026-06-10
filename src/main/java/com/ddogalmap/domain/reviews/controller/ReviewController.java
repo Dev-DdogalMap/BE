@@ -42,11 +42,11 @@ public class ReviewController {
             @Valid @RequestPart("review") ReviewRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> images) {
 
-        // 서비스 레이어로 visitVerificationId를 전달합니다.
-        Long reviewId = reviewService.createReviewWithVerification(visitVerificationId, userPrincipal.userId(), request, images);
+        reviewService.createReviewWithVerification(visitVerificationId, userPrincipal.userId(), request, images);
 
+        // 💡 ID 노출을 제거하고 토스트 문구로 바로 쓸 수 있는 메시지만 반환
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("리뷰가 성공적으로 등록되었습니다. ID: " + reviewId);
+                .body("리뷰가 성공적으로 등록되었습니다.");
     }
 
     @Operation(summary = "음식점별 리뷰 목록 조회")
