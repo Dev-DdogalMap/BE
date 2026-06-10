@@ -1,6 +1,7 @@
 package com.ddogalmap.domain.reviews.repository;
 
 import com.ddogalmap.domain.reviews.dto.projection.FoodTypeReviewCountProjection;
+import com.ddogalmap.domain.reviews.dto.projection.RestaurantRepresentativeImageProjection;
 import com.ddogalmap.domain.reviews.entity.Review;
 import com.ddogalmap.domain.visit.entity.VisitVerification;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,40 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
         LIMIT 1
     """, nativeQuery = true)
     Optional<String> findRepresentativeImageUrl(@Param("restaurantId") Long restaurantId);
+
+    /**
+     * 검색 결과 카드용 — 음식점 ID 리스트에 대해 대표 이미지 일괄 조회.
+     * - 후기 이미지 중 좋아요 최다 1장 (단일 조회와 동일 산식: 좋아요 ↓, 최신 후기 ↓, 이미지 ↑)
+     * - 후기 없거나 이미지 없는 음식점은 결과에서 빠짐 → 서비스에서 null 매핑
+     * - PostgreSQL DISTINCT ON 으로 음식점당 1행만 반환
+     */
+    @Query(value = """
+        SELECT DISTINCT ON (sub.restaurant_id)
+            sub.restaurant_id AS restaurantId,
+            sub.img_url       AS imgUrl
+        FROM (
+            SELECT
+                r.restaurant_id,
+                r.review_id,
+                ri.img_id,
+                ri.img_url,
+                COUNT(l.like_id) AS like_count
+            FROM reviews r
+            JOIN review_imgs ri
+                ON ri.review_id = r.review_id
+            LEFT JOIN likes l
+                ON l.review_id = r.review_id
+            WHERE r.restaurant_id IN (:restaurantIds)
+            GROUP BY r.restaurant_id, r.review_id, ri.img_id, ri.img_url
+        ) sub
+        ORDER BY sub.restaurant_id,
+                 sub.like_count DESC,
+                 sub.review_id DESC,
+                 sub.img_id ASC
+    """, nativeQuery = true)
+    List<RestaurantRepresentativeImageProjection> findRepresentativeImageUrlsByRestaurantIds(
+            @Param("restaurantIds") List<Long> restaurantIds
+    );
 
     @Query(value = """
         SELECT t.content

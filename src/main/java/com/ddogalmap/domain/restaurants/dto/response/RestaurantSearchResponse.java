@@ -23,7 +23,9 @@ public record RestaurantSearchResponse(
             Double averageScore,
             Long reviewCount,
             Integer jjinScore,
-            List<String> tags
+            List<String> tags,
+            // 후기 이미지 중 좋아요 최다 1장. 후기/이미지 없으면 null → FE 에서 "이미지 없음" 폴백
+            String imageUrl
     ) {
     }
 }

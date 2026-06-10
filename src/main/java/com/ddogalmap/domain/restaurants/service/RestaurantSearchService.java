@@ -4,6 +4,8 @@ import com.ddogalmap.domain.restaurants.dto.projection.RestaurantSearchProjectio
 import com.ddogalmap.domain.restaurants.dto.projection.RestaurantTagProjection;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantSearchResponse;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
+import com.ddogalmap.domain.reviews.dto.projection.RestaurantRepresentativeImageProjection;
+import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import com.ddogalmap.domain.users.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class RestaurantSearchService {
 
     private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
 
     @Transactional(readOnly = true)
     public RestaurantSearchResponse search(
@@ -98,12 +101,15 @@ public class RestaurantSearchService {
         }
 
         Map<Long, List<String>> tagsByRestaurantId = loadTopTags(rows);
+        Map<Long, String> imageUrlByRestaurantId = loadRepresentativeImages(rows);
 
         List<RestaurantSearchResponse.Item> items = new ArrayList<>(rows.size());
         for (RestaurantSearchProjection row : rows) {
             List<String> tags = tagsByRestaurantId.getOrDefault(
                     row.getRestaurantId(), Collections.emptyList()
             );
+            // 후기/이미지 없으면 null → FE 에서 "이미지 없음" 폴백 표시
+            String imageUrl = imageUrlByRestaurantId.get(row.getRestaurantId());
             items.add(new RestaurantSearchResponse.Item(
                     row.getRestaurantId(),
                     row.getPlaceName(),
@@ -116,13 +122,34 @@ public class RestaurantSearchService {
                     row.getAverageScore(),
                     row.getReviewCount(),
                     row.getJjinScore(),
-                    tags
+                    tags,
+                    imageUrl
             ));
         }
 
         return new RestaurantSearchResponse(
                 normalizedPage, normalizedSize, totalCount, items
         );
+    }
+
+    /**
+     * 음식점 ID 리스트로 대표 후기 이미지(좋아요 최다 1장)를 한 번에 조회 → restaurantId → imgUrl 매핑.
+     * - 후기/이미지 없는 음식점은 결과에 안 잡힘 → 이후 조회 시 null 반환 (FE 폴백)
+     */
+    private Map<Long, String> loadRepresentativeImages(List<RestaurantSearchProjection> rows) {
+        List<Long> restaurantIds = new ArrayList<>(rows.size());
+        for (RestaurantSearchProjection r : rows) {
+            restaurantIds.add(r.getRestaurantId());
+        }
+
+        List<RestaurantRepresentativeImageProjection> imageRows =
+                reviewRepository.findRepresentativeImageUrlsByRestaurantIds(restaurantIds);
+
+        Map<Long, String> result = new HashMap<>();
+        for (RestaurantRepresentativeImageProjection p : imageRows) {
+            result.put(p.getRestaurantId(), p.getImgUrl());
+        }
+        return result;
     }
 
     /**
