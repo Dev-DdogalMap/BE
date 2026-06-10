@@ -23,8 +23,9 @@ public class Like {
     @Column(name = "like_id")
     private Integer likeId;
 
-    @Column(name = "review_id", nullable = false)
-    private Long reviewId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "review_id", nullable = false)
+    private Review review;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
