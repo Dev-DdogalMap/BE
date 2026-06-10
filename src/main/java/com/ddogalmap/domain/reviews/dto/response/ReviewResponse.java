@@ -3,6 +3,8 @@ package com.ddogalmap.domain.reviews.dto.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static com.ddogalmap.domain.levels.entity.QUserLevel.userLevel;
+
 public record ReviewResponse(
         Long reviewId,
         String nickname,
@@ -13,6 +15,9 @@ public record ReviewResponse(
         List<String> imageUrls,
         List<String> tags,
         int likeCount,
-        String restaurantName
+        String restaurantName,
+        Integer userLevel,
+        String userLevelName,
+        Boolean isLocal
 )   {
 }

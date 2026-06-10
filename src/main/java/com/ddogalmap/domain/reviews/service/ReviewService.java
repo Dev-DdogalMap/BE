@@ -1,7 +1,8 @@
 package com.ddogalmap.domain.reviews.service;
 
+import com.ddogalmap.domain.levels.repository.UserLevelRepository;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
-import com.ddogalmap.domain.restaurants.repository.RestaurantRepository; // 💡 가게 리포지토리 임포트 추가
+import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
 import com.ddogalmap.domain.badges.dto.ReviewCreatedEvent;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,10 +39,10 @@ public class ReviewService {
     private final FileService fileService;
     private final UserRepository userRepository;
     private final VisitVerificationRepository visitVerificationRepository;
-    private final RestaurantRepository restaurantRepository; // 💡 의존성 추가
+    private final RestaurantRepository restaurantRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserLevelRepository userLevelRepository;
 
-    // 리뷰 생성 로직 (기존과 동일)
     @Transactional
     public Long createReviewWithVerification(Long visitVerificationId, Long userId, ReviewRequest request, List<MultipartFile> images) {
         VisitVerification visitVerification = visitVerificationRepository.findById(visitVerificationId)
@@ -72,7 +74,6 @@ public class ReviewService {
 
         boolean hasImage = images != null && !images.isEmpty();
 
-        // 이미지 저장
         if (hasImage) {
             for (MultipartFile image : images) {
                 String storeFilename = fileService.saveFile(image);
@@ -89,14 +90,12 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
 
-        // 경험치 이벤트 발행
         ActivityType activityType = hasImage
                 ? ActivityType.REVIEW_PHOTO
                 : ActivityType.REVIEW_WRITE;
 
         eventPublisher.publishEvent(new LevelExpEvent(userId, activityType, savedReview.getReviewId()));
         eventPublisher.publishEvent(new ReviewCreatedEvent(userId, savedReview.getReviewId()));
-        // restaurant_stats 즉시 갱신 트리거 (AFTER_COMMIT + @Async 로 처리됨)
         eventPublisher.publishEvent(new RestaurantStatsRefreshEvent(List.of(restaurantId)));
 
         return savedReview.getReviewId();
@@ -107,21 +106,41 @@ public class ReviewService {
     public Slice<ReviewResponse> getReviewsByRestaurant(Long restaurantId, boolean hasImage, Pageable pageable) {
         Slice<Review> reviewPage = reviewRepository.findReviewsWithFilter(restaurantId, hasImage, pageable);
 
-        // 💡 이 메서드 안의 모든 리뷰는 동일한 'restaurantId'를 가지므로, 단 한 번만 가게 이름을 조회하면 됩니다.
-        String restaurantName = restaurantRepository.findById(restaurantId)
-                .map(Restaurant::getPlaceName)
-                .orElse("알 수 없는 가게");
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 가게입니다."));
+        String restaurantName = restaurant.getPlaceName();
 
         List<Long> userIds = reviewPage.getContent().stream()
                 .map(Review::getUserId)
                 .distinct()
                 .toList();
 
-        Map<Long, String> userNicknameMap = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getUserId, User::getNickname));
+        Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, user -> user));
+
+        // 💡 해결 지점: Map의 단언 타입을 Integer에서 Level 엔티티 객체 타입으로 수정
+        Map<Long, com.ddogalmap.domain.levels.entity.Level> userLevelMap = new HashMap<>();
+        for (Long uid : userIds) {
+            userLevelRepository.findByUserIdWithLevel(uid).ifPresent(ul -> {
+                userLevelMap.put(uid, ul.getLevel()); // .getLevel() 엔티티 자체를 바인딩
+            });
+        }
 
         return reviewPage.map(review -> {
-            String nickname = userNicknameMap.getOrDefault(review.getUserId(), "알 수 없는 유저");
+            User user = userMap.get(review.getUserId());
+            String nickname = (user != null) ? user.getNickname() : "알 수 없는 유저";
+
+            com.ddogalmap.domain.levels.entity.Level levelEntity = userLevelMap.get(review.getUserId());
+            Integer level = (levelEntity != null) ? levelEntity.getLevel() : 1;
+            String levelName = (levelEntity != null) ? levelEntity.getName() : "맛집 새내기";
+
+            boolean isLocal = false;
+            if (user != null && user.getRegion() != null) {
+                String userRegion = user.getRegion();
+                boolean isInRoadAddress = restaurant.getRoadAddressName() != null && restaurant.getRoadAddressName().contains(userRegion);
+                boolean isInAddress = restaurant.getAddressName() != null && restaurant.getAddressName().contains(userRegion);
+                isLocal = isInRoadAddress || isInAddress;
+            }
 
             return new ReviewResponse(
                     review.getReviewId(),
@@ -130,14 +149,13 @@ public class ReviewService {
                     review.getContent(),
                     review.getIsRevisit(),
                     review.getCreatedAt(),
-                    review.getImages().stream()
-                            .map(ReviewImg::getImgUrl)
-                            .toList(),
-                    review.getTags().stream()
-                            .map(tag -> tag.getContent())
-                            .toList(),
+                    review.getImages().stream().map(ReviewImg::getImgUrl).toList(),
+                    review.getTags().stream().map(tag -> tag.getContent()).toList(),
                     review.getLikes().size(),
-                    restaurantName // 💡 생성자 마지막 파라미터로 주입
+                    restaurantName,
+                    level,
+                    levelName,
+                    isLocal
             );
         });
     }
@@ -147,22 +165,37 @@ public class ReviewService {
     public Page<ReviewResponse> getMyReviews(Long userId, Pageable pageable) {
         Page<Review> reviewPage = reviewRepository.findByUserId(userId, pageable);
 
-        String nickname = userRepository.findById(userId)
-                .map(User::getNickname)
-                .orElse("알 수 없는 유저");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 유저입니다."));
+        String nickname = user.getNickname();
 
-        // 💡 내가 작성한 리뷰들은 서로 다른 가게일 수 있으므로, N+1 문제를 막기 위해 인덱싱 리스트를 추출해 대량 조회(In Query) 처리합니다.
+        // 💡 추가 수정: 내 리뷰 조회 시에도 등급 문자열(Name)을 함께 추출하도록 보완
+        com.ddogalmap.domain.levels.entity.Level myLevelEntity = userLevelRepository.findByUserIdWithLevel(userId)
+                .map(ul -> ul.getLevel())
+                .orElse(null);
+
+        Integer myLevel = (myLevelEntity != null) ? myLevelEntity.getLevel() : 1;
+        String myLevelName = (myLevelEntity != null) ? myLevelEntity.getName() : "맛집 새내기";
+
         List<Long> restaurantIds = reviewPage.getContent().stream()
                 .map(Review::getRestaurantId)
                 .distinct()
                 .toList();
 
-        Map<Long, String> restaurantNameMap = restaurantRepository.findAllById(restaurantIds).stream()
-                .collect(Collectors.toMap(Restaurant::getRestaurantId, Restaurant::getPlaceName));
+        Map<Long, Restaurant> restaurantMap = restaurantRepository.findAllById(restaurantIds).stream()
+                .collect(Collectors.toMap(Restaurant::getRestaurantId, r -> r));
 
         return reviewPage.map(review -> {
-            // Map에서 해당 리뷰의 restaurantId에 매칭되는 가게명을 찾습니다.
-            String restaurantName = restaurantNameMap.getOrDefault(review.getRestaurantId(), "알 수 없는 가게");
+            Restaurant restaurant = restaurantMap.get(review.getRestaurantId());
+            String restaurantName = (restaurant != null) ? restaurant.getPlaceName() : "알 수 없는 가게";
+
+            boolean isLocal = false;
+            if (user.getRegion() != null && restaurant != null) {
+                String userRegion = user.getRegion();
+                boolean isInRoadAddress = restaurant.getRoadAddressName() != null && restaurant.getRoadAddressName().contains(userRegion);
+                boolean isInAddress = restaurant.getAddressName() != null && restaurant.getAddressName().contains(userRegion);
+                isLocal = isInRoadAddress || isInAddress;
+            }
 
             return new ReviewResponse(
                     review.getReviewId(),
@@ -171,14 +204,13 @@ public class ReviewService {
                     review.getContent(),
                     review.getIsRevisit(),
                     review.getCreatedAt(),
-                    review.getImages().stream()
-                            .map(ReviewImg::getImgUrl)
-                            .toList(),
-                    review.getTags().stream()
-                            .map(tag -> tag.getContent())
-                            .toList(),
+                    review.getImages().stream().map(ReviewImg::getImgUrl).toList(),
+                    review.getTags().stream().map(tag -> tag.getContent()).toList(),
                     review.getLikes().size(),
-                    restaurantName // 💡 생성자 마지막 파라미터로 주입
+                    restaurantName,
+                    myLevel,
+                    myLevelName,
+                    isLocal
             );
         });
     }
