@@ -17,14 +17,16 @@ public class LikeController {
     private final LikeService likeService;
 
     @PostMapping("/{reviewId}/like")
-    public ResponseEntity<Boolean> toggleLike(
-            @PathVariable("reviewId") Long reviewId,
-            @AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<String> addLike(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+                                          ) {
 
-        // 1. 서비스 호출 여부 반드시 확인
-        boolean isLiked = likeService.toggleLike(reviewId, userPrincipal.userId());
+        Long userId = userPrincipal.userId();
 
-        // 2. 현재 상태가 좋아요 상태(true)인지 취소 상태(false)인지 반환
-        return ResponseEntity.ok(isLiked);
+        likeService.addLike(reviewId, userId);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reviewId + "번 리뷰에 좋아요를 등록했습니다.");
     }
 }
