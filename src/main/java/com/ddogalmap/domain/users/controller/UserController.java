@@ -1,15 +1,11 @@
 package com.ddogalmap.domain.users.controller;
 
 import com.ddogalmap.domain.badges.dto.response.BadgeResponse;
-import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.request.ChatPreferenceUpdateRequest;
-import com.ddogalmap.domain.users.dto.response.*;
+import com.ddogalmap.domain.users.dto.request.RegionVerificationRequest;
 import com.ddogalmap.domain.users.dto.request.RepresentativeBadgeUpdateRequest;
-import com.ddogalmap.domain.users.service.RegionVerificationService;
-import com.ddogalmap.domain.users.service.UserStatsService;
-import com.ddogalmap.domain.users.service.UserWithdrawalService;
-import com.ddogalmap.domain.users.service.UserActivityService;
-import com.ddogalmap.domain.users.service.UserPreferenceService;
+import com.ddogalmap.domain.users.dto.response.*;
+import com.ddogalmap.domain.users.service.*;
 import com.ddogalmap.global.security.principal.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,6 +37,7 @@ public class UserController {
 	private final UserWithdrawalService userWithdrawalService;
 	private final UserActivityService userActivityService;
 	private final UserStatsService userStatsService;
+	private final UserService userService;
 
 	@Operation(
 			summary = "내 정보 조회",
@@ -234,6 +231,18 @@ public class UserController {
 		return userStatsService.getMyStats(user.userId());
 	}
 
-
+	@Operation(
+			summary = "내 정보 조회",
+			description = "사용자의 정보(이메일, 닉네임, 프로필이미지)를 조회합니다.",
+			security = @SecurityRequirement(name = "bearerAuth")
+	)
+	@GetMapping("/me/profile")
+	public ResponseEntity<MyProfileResponse> getMyProfile(
+			@AuthenticationPrincipal UserPrincipal user
+	) {
+		return ResponseEntity.ok(
+				userService.getMyProfile(user.userId())
+		);
+	}
 
 }

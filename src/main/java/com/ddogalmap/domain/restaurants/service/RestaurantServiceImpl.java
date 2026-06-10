@@ -6,6 +6,7 @@ import com.ddogalmap.domain.restaurants.dto.response.RestaurantInfoResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantMapResponse;
 import com.ddogalmap.domain.restaurants.dto.response.RestaurantPreviewResponse;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
+import com.ddogalmap.domain.reviews.repository.ReviewImgRepository;
 import com.ddogalmap.domain.reviews.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewImgRepository reviewImgRepository;
 
     /**
      * 현재 지도 화면 영역 내 식당 목록을 조회한다.
@@ -93,21 +95,17 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     private RestaurantExtraInfo getRestaurantExtraInfo(Long restaurantId) {
-        String imageUrl = reviewRepository.findRepresentativeImageUrl(restaurantId)
+        String imageUrl = reviewImgRepository.findTopLikedReviewImageUrl(restaurantId)
                 .orElse(null);
 
         List<String> topTags = reviewRepository.findTop3TagsByRestaurantId(restaurantId);
 
-        // TODO: 맛집 지수 계산 구현
-        Double foodScore = null;
-
-        return new RestaurantExtraInfo(imageUrl, topTags, foodScore);
+        return new RestaurantExtraInfo(imageUrl, topTags);
     }
 
     private record RestaurantExtraInfo(
             String imageUrl,
-            List<String> topTags,
-            Double foodScore
+            List<String> topTags
     ) {
     }
 }
