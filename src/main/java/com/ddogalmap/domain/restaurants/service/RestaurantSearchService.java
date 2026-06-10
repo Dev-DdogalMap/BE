@@ -62,8 +62,11 @@ public class RestaurantSearchService {
         String normalizedKeyword = blankToNull(keyword);
         String normalizedRegion = blankToNull(region);
 
-        // region 명시되지 않았고 로그인 사용자라면, 인증된 동네를 자동 적용
-        if (normalizedRegion == null && currentUserId != null) {
+        // 명시적으로 "ALL" 이 전송되면 전국 검색 → 자동 적용 X, 필터 없음
+        // region 비어있고 로그인 사용자라면 인증된 동네(user.region) 자동 적용
+        if ("ALL".equalsIgnoreCase(normalizedRegion)) {
+            normalizedRegion = null;
+        } else if (normalizedRegion == null && currentUserId != null) {
             normalizedRegion = userRepository.findRegionByUserId(currentUserId)
                     .map(this::blankToNull)
                     .orElse(null);

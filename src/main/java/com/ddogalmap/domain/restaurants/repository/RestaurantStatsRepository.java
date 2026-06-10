@@ -20,10 +20,12 @@ public interface RestaurantStatsRepository extends JpaRepository<RestaurantStats
     Optional<LocalDateTime> findLastBatchTime();
 
     /**
-     * 마지막 배치 시각 이후 활동이 있었던 식당 ID 추출.
-     * - reviews.created_at > :since
-     * - visit_verifications.verified_at > :since
-     * 두 source 합집합 (DISTINCT).
+     * 마지막 배치 시각 이후 산식에 영향이 있었던 식당 ID 추출.
+     * 합집합 (DISTINCT):
+     * - reviews.created_at > :since                 (새 리뷰)
+     * - visit_verifications.verified_at > :since    (새 방문 인증)
+     * - users.region_verified_at > :since           (reviewer 의 지역 인증 변경 → 주민 추천 평점에 영향)
+     * - user_levels.updated_at > :since             (reviewer 의 레벨 변경 → 레벨 가중 평균에 영향)
      *
      * (북마크는 산식에 영향 주지 않으므로 트리거에서 제외)
      */
@@ -34,6 +36,16 @@ public interface RestaurantStatsRepository extends JpaRepository<RestaurantStats
             UNION
             SELECT restaurant_id FROM visit_verifications
                 WHERE verified_at > :since
+            UNION
+            SELECT DISTINCT rv.restaurant_id
+                FROM reviews rv
+                JOIN users u ON u.user_id = rv.user_id
+                WHERE u.region_verified_at > :since
+            UNION
+            SELECT DISTINCT rv.restaurant_id
+                FROM reviews rv
+                JOIN user_levels ul ON ul.user_id = rv.user_id
+                WHERE ul.updated_at > :since
         ) AS changed
     """, nativeQuery = true)
     List<Long> findChangedRestaurantIdsSince(@Param("since") LocalDateTime since);
