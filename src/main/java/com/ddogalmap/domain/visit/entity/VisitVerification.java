@@ -12,7 +12,11 @@ import java.time.LocalDateTime;
 
 @Getter
 @Entity
-@Table(name = "visit_verifications")
+@Table(name = "visit_verifications",
+        indexes = {
+                @Index(name = "idx_verified_at", columnList = "verified_at") // 💡 조건 검색 속도 향상을 위한 인덱스 추가
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VisitVerification extends BaseEntity {
 
