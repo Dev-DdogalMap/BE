@@ -61,4 +61,30 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessages, Long>
             order by m.createdAt desc, m.chatMessageId desc
             """)
     List<ChatMessageResponse> findGroupRecentMessageV2(@Param("roomId") Long roomId, Pageable pageable);
+
+    //커서 기반 메세지 목록 조회
+    @Query("""
+    select new com.ddogalmap.domain.chat.dto.groupChat.response.ChatMessageResponse(
+                m.chatMessageId,
+                m.chatRoom.id,
+                u.userId,
+                u.nickname,
+                u.profileImageUrl,
+                COALESCE(lv.level, 1),
+                m.status,
+                m.message,
+                m.createdAt)
+    from ChatMessages m
+    join m.writer u
+    left join UserLevel ul on ul.user = u
+    left join ul.level lv
+    where m.chatRoom.id = :roomId
+      and (:cursorId is null or m.chatMessageId < :cursorId)
+    order by m.chatMessageId desc
+    """)
+    List<ChatMessageResponse> findMessagesWithCursor(
+            @Param("roomId") Long roomId,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable
+    );
 }

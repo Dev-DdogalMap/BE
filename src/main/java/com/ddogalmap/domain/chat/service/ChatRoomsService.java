@@ -94,6 +94,32 @@ public class ChatRoomsService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ChatMessageCursorResponse getChatMessagesV2(Long userId, Long roomId, Long cursorId, Integer size) {
+        ChatRooms room = getParticipatingRoom(userId, roomId);
+        int pageSize = size == null || size < 1 ? DEFAULT_MESSAGE_PAGE_SIZE : Math.min(size, 100);
+
+        // pageSize + 1개 조회해서 다음 페이지 존재 여부 확인
+        List<ChatMessageResponse> messages = chatMessageRepository.findMessagesWithCursor(
+                roomId,
+                cursorId,
+                PageRequest.of(0, pageSize + 1)
+        );
+
+        boolean hasNext = messages.size() > pageSize;
+        if (hasNext) {
+            messages = messages.subList(0, pageSize);
+        }
+
+        // desc로 가져왔으니 오래된 순으로 뒤집기
+        List<ChatMessageResponse> sorted = messages.reversed();
+
+        // 다음 커서 = 현재 배치에서 가장 오래된 메시지의 id
+        Long nextCursor = hasNext ? sorted.getFirst().chatMessageId() : null;
+
+        return new ChatMessageCursorResponse(sorted, nextCursor, hasNext);
+    }
+
     /**
      * 그룹 채팅방 참여
      */

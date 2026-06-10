@@ -13,6 +13,7 @@ public record DirectChatRoomResponse(
         Boolean targetCertified,
         String lastMessage,
         LocalDateTime lastMessageAt,
+        Long lastMessageSenderId,
         Integer unreadCount,
         LocalDateTime createdAt
 ) {

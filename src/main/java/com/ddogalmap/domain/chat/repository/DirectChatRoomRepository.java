@@ -75,6 +75,9 @@ public interface DirectChatRoomRepository extends JpaRepository<DirectChatRoom, 
              ORDER BY dm.createdAt DESC, dm.chatMessageId DESC LIMIT 1),
         (SELECT MAX(dm.createdAt) FROM ChatMessages dm 
              WHERE dm.directChatRoom = dcr),
+        (SELECT dm.writer.userId FROM ChatMessages dm
+             WHERE dm.directChatRoom = dcr
+             ORDER BY dm.createdAt DESC, dm.chatMessageId DESC LIMIT 1),
         0,
         dcr.createdAt,
         "DIRECT"
