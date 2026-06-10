@@ -25,11 +25,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
         FROM reviews r
         JOIN review_imgs ri
             ON ri.review_id = r.review_id
-        JOIN likes l
+        LEFT JOIN likes l
             ON l.review_id = r.review_id
         WHERE r.restaurant_id = :restaurantId
         GROUP BY r.review_id, ri.img_id, ri.img_url
-        HAVING COUNT(l.like_id) >= 10
         ORDER BY COUNT(l.like_id) DESC,
                  r.review_id DESC,
                  ri.img_id ASC

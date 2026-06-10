@@ -5,6 +5,7 @@ import com.ddogalmap.domain.restaurants.repository.RestaurantRepository; // 💡
 import com.ddogalmap.domain.badges.dto.ReviewCreatedEvent;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
+import com.ddogalmap.domain.restaurants.event.RestaurantStatsRefreshEvent;
 import com.ddogalmap.domain.reviews.dto.request.ReviewRequest;
 import com.ddogalmap.domain.reviews.dto.response.ReviewResponse;
 import com.ddogalmap.domain.reviews.entity.Review;
@@ -95,6 +96,8 @@ public class ReviewService {
 
         eventPublisher.publishEvent(new LevelExpEvent(userId, activityType, savedReview.getReviewId()));
         eventPublisher.publishEvent(new ReviewCreatedEvent(userId, savedReview.getReviewId()));
+        // restaurant_stats 즉시 갱신 트리거 (AFTER_COMMIT + @Async 로 처리됨)
+        eventPublisher.publishEvent(new RestaurantStatsRefreshEvent(List.of(restaurantId)));
 
         return savedReview.getReviewId();
     }
