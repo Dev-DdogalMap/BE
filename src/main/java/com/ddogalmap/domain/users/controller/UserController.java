@@ -240,6 +240,10 @@ public class UserController {
 	public ResponseEntity<MyProfileResponse> getMyProfile(
 			@AuthenticationPrincipal UserPrincipal user
 	) {
+		if (user == null) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "인증 정보가 없습니다.");
+		}
+
 		return ResponseEntity.ok(
 				userService.getMyProfile(user.userId())
 		);

@@ -16,6 +16,22 @@ public interface ReviewRepository extends JpaRepository<Review, Long>, ReviewRep
     Slice<Review> findByRestaurantId(Long restaurantId, Pageable pageable);
 
     @Query(value = """
+        SELECT ri.img_url
+        FROM reviews r
+        JOIN review_imgs ri
+            ON ri.review_id = r.review_id
+        LEFT JOIN likes l
+            ON l.review_id = r.review_id
+        WHERE r.restaurant_id = :restaurantId
+        GROUP BY r.review_id, ri.img_id, ri.img_url
+        ORDER BY COUNT(l.like_id) DESC,
+                 r.review_id DESC,
+                 ri.img_id ASC
+        LIMIT 1
+    """, nativeQuery = true)
+    Optional<String> findRepresentativeImageUrl(@Param("restaurantId") Long restaurantId);
+
+    @Query(value = """
         SELECT t.content
         FROM tags t
         JOIN reviews r
