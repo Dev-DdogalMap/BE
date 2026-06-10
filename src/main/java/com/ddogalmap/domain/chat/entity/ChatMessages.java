@@ -3,22 +3,19 @@ package com.ddogalmap.domain.chat.entity;
 import com.ddogalmap.domain.chat.enumtype.Status;
 import com.ddogalmap.domain.users.BaseEntity;
 import com.ddogalmap.domain.users.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
 @Entity
-@Table(name = "chat_messages")
+@Table(
+        name = "chat_messages",
+        //메세지 목록 조회를 위한 복합 인덱스
+        indexes = @Index(
+                name = "idx_chat_messages_room_id",
+                columnList = "chat_room_id, chat_message_id DESC"
+        )
+)
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
