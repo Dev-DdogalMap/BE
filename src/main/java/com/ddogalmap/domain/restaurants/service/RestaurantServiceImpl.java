@@ -98,16 +98,12 @@ public class RestaurantServiceImpl implements RestaurantService {
 
         List<String> topTags = reviewRepository.findTop3TagsByRestaurantId(restaurantId);
 
-        // TODO: 맛집 지수 계산 구현
-        Double foodScore = null;
-
-        return new RestaurantExtraInfo(imageUrl, topTags, foodScore);
+        return new RestaurantExtraInfo(imageUrl, topTags);
     }
 
     private record RestaurantExtraInfo(
             String imageUrl,
-            List<String> topTags,
-            Double foodScore
+            List<String> topTags
     ) {
     }
 }
