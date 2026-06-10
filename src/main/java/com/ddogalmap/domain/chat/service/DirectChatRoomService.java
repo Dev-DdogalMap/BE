@@ -88,6 +88,7 @@ public class DirectChatRoomService {
                 requesterId,
                 latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt(),
+                latestMessage == null ? null : latestMessage.getWriter().getUserId(),
                 opponentProfile.level(),
                 opponentProfile.levelName(),
                 opponentProfile.specialty(),
@@ -111,6 +112,7 @@ public class DirectChatRoomService {
                         imageUtilService.getImageUrl(chatRoom.targetProfileImageUrl()),  //cdn url 적용
                         chatRoom.lastMessage(),
                         chatRoom.lastMessageAt(),
+                        chatRoom.lastMessageSenderId(),
                         chatRoom.unreadCount(),
                         chatRoom.createdAt(),
                         "GROUP"
@@ -178,6 +180,7 @@ public class DirectChatRoomService {
                 currentUserId,
                 latestMessage == null ? null : latestMessage.getMessage(),
                 latestMessage == null ? null : latestMessage.getCreatedAt(),
+                latestMessage == null ? null : latestMessage.getWriter().getUserId(),
                 opponentProfile.level(),
                 opponentProfile.levelName(),
                 opponentProfile.specialty(),

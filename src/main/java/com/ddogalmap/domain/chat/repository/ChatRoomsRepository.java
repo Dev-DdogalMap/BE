@@ -51,6 +51,7 @@ public interface ChatRoomsRepository extends JpaRepository<ChatRooms, Long> {
                         cr.imageUrl,
                         (SELECT cm.message FROM ChatMessages cm WHERE cm.chatRoom = cr ORDER BY cm.createdAt DESC LIMIT 1),
                         (SELECT MAX(cm.createdAt) FROM ChatMessages cm WHERE cm.chatRoom = cr),
+                        (SELECT cm.writer.userId FROM ChatMessages cm WHERE cm.chatRoom = cr ORDER BY cm.createdAt DESC LIMIT 1),
                         0,
                         cr.createdAt,
                         "GROUP"

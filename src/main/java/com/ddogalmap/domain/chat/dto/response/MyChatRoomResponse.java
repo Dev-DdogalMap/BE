@@ -9,6 +9,7 @@ public record MyChatRoomResponse(
         String targetProfileImageUrl,
         String lastMessage,
         LocalDateTime lastMessageAt,
+        Long lastMessageSenderId,
         Integer unreadCount,
         LocalDateTime createdAt,
         String chatType  // "DIRECT" or "GROUP" 추가

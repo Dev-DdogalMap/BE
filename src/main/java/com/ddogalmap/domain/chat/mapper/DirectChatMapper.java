@@ -19,6 +19,7 @@ public final class DirectChatMapper {
             Long currentUserId,
             String lastMessage,
             LocalDateTime lastMessageAt,
+            Long lastMessageSenderId,
             Integer targetLevel,
             String targetLevelName,
             String targetSpecialty,
@@ -38,6 +39,7 @@ public final class DirectChatMapper {
                 opponentUnavailable ? false : targetCertified,
                 lastMessage,
                 lastMessageAt,
+                lastMessageSenderId,
                 0,
                 room.getCreatedAt()
         );
