@@ -4,6 +4,7 @@ import com.ddogalmap.domain.badges.dto.VisitVerifiedEvent;
 import com.ddogalmap.domain.levels.dto.LevelExpEvent;
 import com.ddogalmap.domain.levels.enumtype.ActivityType;
 import com.ddogalmap.domain.restaurants.entity.Restaurant;
+import com.ddogalmap.domain.restaurants.event.RestaurantStatsRefreshEvent;
 import com.ddogalmap.domain.restaurants.repository.RestaurantRepository;
 import com.ddogalmap.domain.users.entity.User;
 import com.ddogalmap.domain.users.repository.UserRepository;
@@ -15,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -75,6 +78,8 @@ public class VisitVerificationService {
         // 경험치 이벤트 발행
         eventPublisher.publishEvent(new LevelExpEvent(userId, ActivityType.VISIT_VERIFY, saved.getId()));
         eventPublisher.publishEvent(new VisitVerifiedEvent(user.getUserId()));
+        // restaurant_stats 즉시 갱신 트리거 (AFTER_COMMIT + @Async 로 처리됨)
+        eventPublisher.publishEvent(new RestaurantStatsRefreshEvent(List.of(restaurant.getRestaurantId())));
 
         return new VisitVerificationResponse(
                 saved.getId(),
