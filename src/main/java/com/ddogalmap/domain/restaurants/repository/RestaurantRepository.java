@@ -110,7 +110,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
         LEFT JOIN restaurant_stats rs
             ON rs.restaurant_id = r.restaurant_id
         LEFT JOIN (
-            SELECT b.restaurant_id, COUNT(*) AS bookmark_count
+            SELECT b.restaurant_id, COUNT(DISTINCT b.user_id) AS bookmark_count
             FROM bookmarks b
             WHERE b.restaurant_id = :restaurantId
             GROUP BY b.restaurant_id
