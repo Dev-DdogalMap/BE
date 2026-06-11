@@ -93,7 +93,7 @@
 | ORM | Spring Data JPA, Querydsl, Hibernate Spatial |
 | File Storage | AWS S3 |
 | Infra | AWS EC2, AWS RDS, Nginx, Docker, Jenkins |
-| Monitoring | Spring Actuator, Micrometer, Prometheus, Elasticsearch, Logstash, Kibana 9.1.0 |
+| Monitoring | Spring Actuator, Micrometer, Elasticsearch, Logstash, Kibana 9.1.0 |
 | Logging | Logstash Logback Encoder |
 | API Docs | Springdoc OpenAPI / Swagger UI |
 
@@ -352,7 +352,7 @@ http://localhost:8080/swagger-ui/index.html
 * 리뷰 작성, 방문 인증 후 레벨/뱃지/통계 이벤트 발행
 * 북마크 카테고리 기반 나의 맛집 관리
 * 실시간 Websocket 1:1 / 그룹 채팅
-* Actuator / Prometheus 기반 운영 모니터링 준비
+* ELK 셋업 및 로그 조회
 
 ---
 
